@@ -75,6 +75,8 @@ namespace GXLightBrowser
 
         public BrowserForm()
         {
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
+            UpdateStyles();
             Text = "Gan Browser";
             MinimumSize = new Size(760, 540);
             Size = new Size(1280, 780);
@@ -282,6 +284,13 @@ namespace GXLightBrowser
                 {
                     e.SuppressKeyPress = true;
                     NavigateAddress();
+                }
+            };
+            _address.MouseDown += delegate(object sender, MouseEventArgs e)
+            {
+                if (e.Button == MouseButtons.Left && e.Clicks >= 3)
+                {
+                    BeginInvoke((MethodInvoker)delegate { _address.SelectAll(); });
                 }
             };
 
@@ -725,7 +734,6 @@ namespace GXLightBrowser
             page.Tag = tab;
 
             _tabs.TabPages.Add(page);
-            _tabs.SelectedTab = page;
             RebuildTabStrip();
 
             await web.EnsureCoreWebView2Async(_environment);
@@ -734,6 +742,8 @@ namespace GXLightBrowser
             {
                 Navigate(web, url);
             }
+
+            _tabs.SelectedTab = page;
 
             ApplyTabResourcePolicy();
             EnforceLowResourceLimit();
@@ -1151,6 +1161,13 @@ namespace GXLightBrowser
                 return;
             }
 
+            const string downloadOpenPrefix = "gxlight:download:open:";
+            if (message.StartsWith(downloadOpenPrefix, StringComparison.Ordinal))
+            {
+                OpenDownloadedFile(Base64Decode(message.Substring(downloadOpenPrefix.Length)));
+                return;
+            }
+
             const string playlistDeletePrefix = "gxlight:playlist:delete:";
             if (message.StartsWith(playlistDeletePrefix, StringComparison.Ordinal))
             {
@@ -1510,6 +1527,29 @@ namespace GXLightBrowser
             {
                 entry.State = e.DownloadOperation.State.ToString();
             };
+        }
+
+        private void OpenDownloadedFile(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            {
+                MessageBox.Show(this, "El archivo todavia no esta disponible para abrir.", "Descargas",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                ProcessStartInfo startInfo = new ProcessStartInfo(path);
+                startInfo.UseShellExecute = true;
+                Process.Start(startInfo);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Could not open downloaded file: " + ex.Message);
+                MessageBox.Show(this, "No se pudo abrir el archivo." + Environment.NewLine + ex.Message, "Descargas",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void AddHistoryEntry(TabPage page, WebView2 web)
@@ -3454,6 +3494,15 @@ namespace GXLightBrowser
 
             int closedIndex = _tabs.TabPages.IndexOf(page);
             BrowserTab tab = page.Tag as BrowserTab;
+            int nextIndex = closedIndex < _tabs.TabPages.Count - 1 ? closedIndex + 1 : closedIndex - 1;
+            TabPage nextPage = nextIndex >= 0 ? _tabs.TabPages[nextIndex] : null;
+
+            _tabs.SuspendLayout();
+            if (nextPage != null)
+            {
+                _tabs.SelectedTab = nextPage;
+            }
+            page.Visible = false;
             _tabs.TabPages.Remove(page);
             if (tab != null && tab.WebView != null)
             {
@@ -3466,11 +3515,7 @@ namespace GXLightBrowser
                 tab.Favicon = null;
             }
             page.Dispose();
-
-            if (_tabs.TabPages.Count > 0)
-            {
-                _tabs.SelectedIndex = Math.Min(Math.Max(0, closedIndex), _tabs.TabPages.Count - 1);
-            }
+            _tabs.ResumeLayout(true);
 
             ApplyTabResourcePolicy();
             RebuildTabStrip();

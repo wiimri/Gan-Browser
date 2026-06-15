@@ -4,7 +4,7 @@ Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Li
 
 ## Version actual
 
-- Version publicada: `2.4`
+- Version publicada: `2.5`
 - Fecha: `2026-06-15`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
@@ -20,6 +20,19 @@ https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
 Ese archivo indica cual es la version publicada, el nombre de la release, los enlaces y las novedades que debe mostrar `gxlight://updated`.
 
 Si GitHub no responde, Gan Browser usa las notas locales compiladas como respaldo.
+
+## v2.5 - Transiciones fluidas y acciones rapidas
+
+Fecha: `2026-06-15`
+
+Cambios:
+
+- Las nuevas pestanas se seleccionan solamente despues de inicializar WebView2.
+- Al cerrar una pestana activa se selecciona primero la siguiente, evitando mostrar el fondo vacio.
+- El contenedor de pestanas usa doble buffer para reducir repintados intermedios.
+- Triple clic en la barra de direcciones selecciona todo el texto.
+- Doble clic sobre una descarga intenta abrir el archivo disponible.
+- Se analizo la grabacion `2026-06-14 23-36-55.mp4` para identificar las transiciones sin contenido.
 
 ## v2.4 - Navegacion sin borde y bookmarks completos
 

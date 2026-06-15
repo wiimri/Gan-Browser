@@ -1,14 +1,14 @@
 {
-  "version": "2.4",
-  "releaseName": "Gan Browser 2.4",
+  "version": "2.5",
+  "releaseName": "Gan Browser 2.5",
   "publishedAt": "2026-06-15",
   "downloadUrl": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe",
   "sha256Url": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt",
   "sourceUrl": "https://github.com/wiimri/Gan-Browser",
   "changelogUrl": "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md",
   "highlights": [
-    "Se elimina el borde blanco nativo alrededor del contenido web.",
-    "La barra de marcadores ahora muestra sus botones completos sin recortes.",
-    "La navegacion aprovecha correctamente todo el espacio disponible."
+    "Abrir y cerrar pestanas conserva el contenido visible durante la transicion.",
+    "Triple clic en la barra de direcciones selecciona todo el texto.",
+    "Doble clic en una descarga abre el archivo disponible."
   ]
 }

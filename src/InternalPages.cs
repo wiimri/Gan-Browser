@@ -246,11 +246,14 @@ namespace GXLightBrowser
             }
 
             StringBuilder body = new StringBuilder();
+            body.Append("<p>Doble clic sobre una descarga para abrir el archivo disponible.</p>");
             body.Append("<table><tr><th>Time</th><th>File</th><th>Status</th><th>Path</th></tr>");
             for (int i = 0; i < downloads.Count; i++)
             {
                 DownloadEntry entry = downloads[i];
-                body.Append("<tr><td>" + entry.StartedUtc.ToLocalTime().ToString("HH:mm") + "</td><td>" +
+                string encodedPath = Convert.ToBase64String(Encoding.UTF8.GetBytes(entry.Path ?? string.Empty));
+                body.Append("<tr style='cursor:pointer' ondblclick=\"chrome.webview.postMessage('gxlight:download:open:" + encodedPath + "')\"><td>" +
+                    entry.StartedUtc.ToLocalTime().ToString("HH:mm") + "</td><td>" +
                     EscapeHtml(entry.FileName) + "</td><td>" + EscapeHtml(entry.State) + "</td><td>" +
                     EscapeHtml(entry.Path) + "</td></tr>");
             }
