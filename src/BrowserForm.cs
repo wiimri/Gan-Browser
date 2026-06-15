@@ -3014,7 +3014,7 @@ namespace GXLightBrowser
                 ChromeButton tab = new ChromeButton();
                 tab.Text = Trim(page.Text, Width < 900 ? 16 : 24);
                 tab.Width = browserTab != null && browserTab.IsCompact ? 38 : width;
-                tab.Height = 22;
+                tab.Height = 24;
                 tab.Margin = new Padding(0, 1, 6, 1);
                 tab.IsSelected = page == _tabs.SelectedTab;
                 tab.IconOnly = _appSettings.CompactIconTabs || (browserTab != null && browserTab.IsCompact) || tab.Width <= 58;
@@ -3074,7 +3074,7 @@ namespace GXLightBrowser
             }
 
             ConfigureButton(_tabStripNewTab, "+", 34, "Nueva pestana");
-            _tabStripNewTab.Height = 22;
+            _tabStripNewTab.Height = 24;
             _tabStripNewTab.Margin = new Padding(0, 1, 6, 1);
             _tabStrip.Controls.Add(_tabStripNewTab);
 
@@ -3098,7 +3098,7 @@ namespace GXLightBrowser
             ChromeButton island = new ChromeButton();
             island.Text = string.Empty;
             island.Width = Math.Min(40, 14 + Math.Min(5, count) * 6);
-            island.Height = 22;
+            island.Height = 24;
             island.Margin = new Padding(0, 1, 6, 1);
             island.IsIslandToggle = true;
             island.IslandMemberCount = count;
@@ -5219,7 +5219,7 @@ namespace GXLightBrowser
             int sidebarWidth = 46;
             int statusHeight = 22;
             
-            int tabStripHeight = 22;
+            int tabStripHeight = 26;
             int navHeight = 30;
             int bookmarksHeight = _appSettings.ShowBookmarksBar ? 28 : 0;
             int topbarPadding = _appSettings.ShowBookmarksBar ? 8 : 4;

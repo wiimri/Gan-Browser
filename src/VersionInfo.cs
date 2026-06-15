@@ -2,16 +2,16 @@ namespace GXLightBrowser
 {
     internal static class VersionInfo
     {
-        public const string CurrentVersion = "2.6";
-        public const string ReleaseName = "Gan Browser 2.6";
+        public const string CurrentVersion = "2.7";
+        public const string ReleaseName = "Gan Browser 2.7";
 
         public static string[] Highlights()
         {
             return new string[]
             {
-                "Las nuevas pestanas abren directamente la pagina de inicio sin mostrar about:blank.",
-                "El cierre difiere la destruccion del WebView hasta mostrar la pestana vecina.",
-                "Se agrega una prueba Playwright para detectar transiciones sin contenido."
+                "La barra superior reserva espacio vertical completo para las pestanas.",
+                "El texto, los iconos y el indicador de suspension ya no quedan recortados.",
+                "Se agrega una comprobacion automatica de las dimensiones de la fila de pestanas."
             };
         }
     }

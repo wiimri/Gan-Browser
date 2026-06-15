@@ -4,7 +4,7 @@ Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Li
 
 ## Version actual
 
-- Version publicada: `2.6`
+- Version publicada: `2.7`
 - Fecha: `2026-06-15`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
@@ -20,6 +20,17 @@ https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
 Ese archivo indica cual es la version publicada, el nombre de la release, los enlaces y las novedades que debe mostrar `gxlight://updated`.
 
 Si GitHub no responde, Gan Browser usa las notas locales compiladas como respaldo.
+
+## v2.7 - Espacio vertical completo en pestanas
+
+Fecha: `2026-06-15`
+
+Cambios:
+
+- La fila superior aumenta su altura para respetar los margenes verticales de las pestanas.
+- Las pestanas, el boton de nueva pestana y los indicadores de isla usan una altura uniforme.
+- El texto, los iconos y el indicador `[S]` de suspension ya no quedan recortados en la parte inferior.
+- Se agrego una comprobacion automatica que impide publicar dimensiones incompatibles.
 
 ## v2.6 - Eliminacion profunda de parpadeos
 

@@ -1,14 +1,14 @@
 {
-  "version": "2.6",
-  "releaseName": "Gan Browser 2.6",
+  "version": "2.7",
+  "releaseName": "Gan Browser 2.7",
   "publishedAt": "2026-06-15",
   "downloadUrl": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe",
   "sha256Url": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt",
   "sourceUrl": "https://github.com/wiimri/Gan-Browser",
   "changelogUrl": "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md",
   "highlights": [
-    "Las nuevas pestanas abren directamente la pagina de inicio sin mostrar about:blank.",
-    "El cierre difiere la destruccion del WebView hasta mostrar la pestana vecina.",
-    "Se agrega una prueba Playwright para detectar transiciones sin contenido."
+    "La barra superior reserva espacio vertical completo para las pestanas.",
+    "El texto, los iconos y el indicador de suspension ya no quedan recortados.",
+    "Se agrega una comprobacion automatica de las dimensiones de la fila de pestanas."
   ]
 }
