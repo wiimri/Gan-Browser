@@ -4,7 +4,7 @@ Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Li
 
 ## Version actual
 
-- Version publicada: `2.7`
+- Version publicada: `2.8`
 - Fecha: `2026-06-15`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
@@ -20,6 +20,17 @@ https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
 Ese archivo indica cual es la version publicada, el nombre de la release, los enlaces y las novedades que debe mostrar `gxlight://updated`.
 
 Si GitHub no responde, Gan Browser usa las notas locales compiladas como respaldo.
+
+## v2.8 - Cierre seguro de pestanas con favicon
+
+Fecha: `2026-06-15`
+
+Cambios:
+
+- Se corrigio la excepcion `System.ArgumentException: Parameter is not valid` detectada al cerrar una pestana.
+- Cada boton de pestana conserva una copia propia del favicon mientras necesita dibujarlo.
+- La barra desecha explicitamente los botones retirados durante cada reconstruccion.
+- Se agrego una prueba que libera el favicon original y verifica que el boton pueda repintarse sin errores.
 
 ## v2.7 - Espacio vertical completo en pestanas
 

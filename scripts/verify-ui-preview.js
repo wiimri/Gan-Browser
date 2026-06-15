@@ -31,8 +31,8 @@ function verifyInternalPageRoutes() {
   const buildInstaller = fs.readFileSync(path.join(root, "scripts", "Build-Installer.ps1"), "utf8");
   const requirements = [
     [browserForm.includes('Text = "Gan Browser"'), "Gan Browser window branding is missing"],
-    [versionInfo.includes('CurrentVersion = "2.7"'), "Gan Browser 2.7 version is missing"],
-    [versionInfo.includes('ReleaseName = "Gan Browser 2.7"'), "Gan Browser release name is missing"],
+    [versionInfo.includes('CurrentVersion = "2.8"'), "Gan Browser 2.8 version is missing"],
+    [versionInfo.includes('ReleaseName = "Gan Browser 2.8"'), "Gan Browser release name is missing"],
     [updateJson.sourceUrl === "https://github.com/wiimri/Gan-Browser", "update manifest repository is incorrect"],
     [updateJson.downloadUrl.endsWith("/GanBrowser-Setup-x64.exe"), "Gan permanent installer URL is incorrect"],
     [updateJson.sha256Url.endsWith("/GanBrowser-Setup-x64.sha256.txt"), "Gan installer SHA-256 URL is incorrect"],
@@ -69,6 +69,8 @@ function verifyInternalPageRoutes() {
     [browserForm.includes("_tabs.SelectedTab = page;") && browserForm.indexOf("_tabs.SelectedTab = page;") > browserForm.indexOf("await web.EnsureCoreWebView2Async(_environment);"), "new tabs are selected before WebView2 is ready"],
     [browserForm.includes("_tabs.SelectedTab = nextPage;"), "closing an active tab does not select its replacement first"],
     [browserForm.includes("BeginInvoke((MethodInvoker)delegate { DisposeClosedTab(page, tab); })"), "closed tabs are disposed before the replacement can paint"],
+    [browserForm.includes("previousControl.Dispose();"), "removed tab buttons are not disposed"],
+    [fs.readFileSync(path.join(root, "src", "ChromeButton.cs"), "utf8").includes("replacement = new Bitmap(value);"), "tab buttons still share disposable favicon images"],
     [browserForm.includes("_newTab.Click += async delegate { await CreateTabAsync(HomeUrl); }"), "new tab button still exposes about:blank"],
     [!browserForm.includes('CreateTabAsync("about:blank")'), "normal new-tab flow still opens an empty about:blank page"],
     [browserForm.includes("PrepareNewTabSurfaceAsync"), "new WebViews are exposed before their first rendered surface"],

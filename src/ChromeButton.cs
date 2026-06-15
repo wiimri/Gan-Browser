@@ -32,7 +32,32 @@ namespace GXLightBrowser
         public bool ShowCloseGlyph { get; set; }
         public bool ShowIslandStripe { get; set; }
         public Color IslandColor { get; set; }
-        public Image IconImage { get; set; }
+        private Image _iconImage;
+        public Image IconImage
+        {
+            get { return _iconImage; }
+            set
+            {
+                Image replacement = null;
+                if (value != null)
+                {
+                    try
+                    {
+                        replacement = new Bitmap(value);
+                    }
+                    catch (ArgumentException)
+                    {
+                    }
+                }
+
+                Image previous = _iconImage;
+                _iconImage = replacement;
+                if (previous != null)
+                {
+                    previous.Dispose();
+                }
+            }
+        }
         public bool IconOnly { get; set; }
         public bool ShowIconPlaceholder { get; set; }
         public Color IconPlaceholderColor { get; set; }
@@ -112,14 +137,14 @@ namespace GXLightBrowser
             }
 
             int contentLeft = rect.Left + (ShowIslandStripe ? 16 : 8);
-            if (IconImage != null || ShowIconPlaceholder)
+            if (_iconImage != null || ShowIconPlaceholder)
             {
                 int iconSize = Math.Min(16, rect.Height - 8);
                 int iconLeft = IconOnly ? rect.Left + (rect.Width - iconSize) / 2 : contentLeft;
                 int iconTop = rect.Top + (rect.Height - iconSize) / 2;
-                if (IconImage != null)
+                if (_iconImage != null)
                 {
-                    pevent.Graphics.DrawImage(IconImage, new Rectangle(iconLeft, iconTop, iconSize, iconSize));
+                    pevent.Graphics.DrawImage(_iconImage, new Rectangle(iconLeft, iconTop, iconSize, iconSize));
                 }
                 else
                 {
@@ -157,6 +182,16 @@ namespace GXLightBrowser
                     pevent.Graphics.DrawLine(pen, close.Right - 5, close.Top + 5, close.Left + 5, close.Bottom - 5);
                 }
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && _iconImage != null)
+            {
+                _iconImage.Dispose();
+                _iconImage = null;
+            }
+            base.Dispose(disposing);
         }
 
         private Rectangle CloseGlyphBounds()

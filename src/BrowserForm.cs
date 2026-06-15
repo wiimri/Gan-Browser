@@ -2995,7 +2995,15 @@ namespace GXLightBrowser
         private void RebuildTabStrip()
         {
             _tabStrip.SuspendLayout();
-            _tabStrip.Controls.Clear();
+            for (int i = _tabStrip.Controls.Count - 1; i >= 0; i--)
+            {
+                Control previousControl = _tabStrip.Controls[i];
+                _tabStrip.Controls.RemoveAt(i);
+                if (previousControl != _tabStripNewTab)
+                {
+                    previousControl.Dispose();
+                }
+            }
 
             int width = CalculateTabWidth();
             HashSet<int> renderedIslandBars = new HashSet<int>();

@@ -48,6 +48,8 @@ if ($LASTEXITCODE -ne 0) {
     /reference:System.Drawing.dll `
     /reference:System.Windows.Forms.dll `
     (Join-Path $Root "src\BorderlessTabControl.cs") `
+    (Join-Path $Root "src\ChromeButton.cs") `
+    (Join-Path $Root "src\Theme.cs") `
     (Join-Path $Root "tests\LayoutProbe.cs")
 
 if ($LASTEXITCODE -ne 0) {
