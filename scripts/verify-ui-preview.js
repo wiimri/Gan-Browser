@@ -31,8 +31,8 @@ function verifyInternalPageRoutes() {
   const buildInstaller = fs.readFileSync(path.join(root, "scripts", "Build-Installer.ps1"), "utf8");
   const requirements = [
     [browserForm.includes('Text = "Gan Browser"'), "Gan Browser window branding is missing"],
-    [versionInfo.includes('CurrentVersion = "2.9"'), "Gan Browser 2.9 version is missing"],
-    [versionInfo.includes('ReleaseName = "Gan Browser 2.9"'), "Gan Browser release name is missing"],
+    [versionInfo.includes('CurrentVersion = "2.10"'), "Gan Browser 2.10 version is missing"],
+    [versionInfo.includes('ReleaseName = "Gan Browser 2.10"'), "Gan Browser release name is missing"],
     [updateJson.sourceUrl === "https://github.com/wiimri/Gan-Browser", "update manifest repository is incorrect"],
     [updateJson.downloadUrl.endsWith("/GanBrowser-Setup-x64.exe"), "Gan permanent installer URL is incorrect"],
     [updateJson.sha256Url.endsWith("/GanBrowser-Setup-x64.sha256.txt"), "Gan installer SHA-256 URL is incorrect"],
@@ -82,6 +82,9 @@ function verifyInternalPageRoutes() {
     [browserForm.includes("PasswordVaultSecurity.MatchesExactHost"), "password vault autofill does not require an exact host match"],
     [browserForm.includes("Rellenar sitio actual desde la bóveda"), "password vault autofill action is missing"],
     [browserForm.includes("Keys.Control | Keys.Shift | Keys.L"), "password vault autofill shortcut is missing"],
+    [browserForm.includes("InstallVaultAssistAsync"), "password vault form assistant is missing"],
+    [browserForm.includes("FillVaultCredentialFromPageAsync"), "password selection does not request native verification"],
+    [browserForm.includes("web != ActiveWebView() || !IsActiveWindow()"), "background pages can request password vault unlock"],
     [browserForm.includes('VerifyVaultAccessAsync("Exportar todas las contraseñas'), "password vault export is not protected by Windows Hello"],
     [browserForm.includes("string.IsNullOrWhiteSpace(manifest.Sha256Url) || !VerifyInstallerHash"), "updates without SHA-256 are not rejected"],
     [browserForm.includes("/RELAUNCH"), "update relaunch argument is missing"],

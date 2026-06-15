@@ -4,7 +4,7 @@ Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Li
 
 ## Version actual
 
-- Version publicada: `2.9`
+- Version publicada: `2.10`
 - Fecha: `2026-06-15`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
@@ -20,6 +20,19 @@ https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
 Ese archivo indica cual es la version publicada, el nombre de la release, los enlaces y las novedades que debe mostrar `gxlight://updated`.
 
 Si GitHub no responde, Gan Browser usa las notas locales compiladas como respaldo.
+
+## v2.10 - Asistente contextual de credenciales
+
+Fecha: `2026-06-15`
+
+Cambios:
+
+- El usuario o correo de la primera cuenta se rellena automaticamente al detectar credenciales para el dominio.
+- Los formularios muestran las cuentas disponibles junto al campo de contrasena.
+- Al seleccionar una cuenta se completa su usuario y se solicita Windows Hello/PIN antes de rellenar la contrasena.
+- El asistente detecta formularios agregados dinamicamente sin exponer contrasenas en el DOM.
+- Las paginas en segundo plano no pueden solicitar el desbloqueo de la boveda.
+- `Ctrl+Shift+L` permanece disponible como accion de respaldo.
 
 ## v2.9 - Boveda util con Windows Hello
 

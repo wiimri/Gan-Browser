@@ -2,10 +2,11 @@
 
 Fecha: 2026-06-15
 
-Version actual: 2.9
+Version actual: 2.10
 
 ## Revision de mantenimiento 2026-06-15
 
+- Version `2.10`: agregado asistente contextual para usuario automatico y seleccion protegida de contrasena.
 - Version `2.9`: boveda protegida por Windows Hello/PIN con visualizacion y rellenado por dominio exacto.
 - Version `2.8`: eliminada la excepcion de dibujo causada por favicons liberados al cerrar pestanas.
 - Version `2.7`: corregido el espacio vertical de la barra superior para evitar pestanas e indicadores recortados.

@@ -1029,6 +1029,17 @@ namespace GXLightBrowser
             }
 
             CoreWebView2 core = sender as CoreWebView2;
+            const string vaultFillPrefix = "ganvault:fill:";
+            if (message.StartsWith(vaultFillPrefix, StringComparison.Ordinal))
+            {
+                int index;
+                if (int.TryParse(message.Substring(vaultFillPrefix.Length), out index))
+                {
+                    Task ignored = FillVaultCredentialFromPageAsync(core, e.Source, index);
+                }
+                return;
+            }
+
             if (message.StartsWith("gxlight:", StringComparison.Ordinal) && !IsTrustedInternalMessageSource(core, e.Source))
             {
                 return;
@@ -3076,6 +3087,49 @@ namespace GXLightBrowser
             }
         }
 
+        private async Task FillVaultCredentialFromPageAsync(CoreWebView2 core, string source, int matchIndex)
+        {
+            WebView2 web = WebViewForCore(core);
+            Uri sourceUri;
+            if (web == null || web != ActiveWebView() || !IsActiveWindow() ||
+                web.Source == null || !Uri.TryCreate(source, UriKind.Absolute, out sourceUri) ||
+                !string.Equals(sourceUri.Host, web.Source.Host, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            List<PasswordVaultEntry> matches = VaultEntriesForHost(web.Source.Host);
+            if (matchIndex < 0 || matchIndex >= matches.Count ||
+                !await VerifyVaultAccessAsync("Rellenar contraseña en " + web.Source.Host))
+            {
+                return;
+            }
+
+            PasswordVaultEntry selected = matches[matchIndex];
+            string username = Convert.ToBase64String(Encoding.UTF8.GetBytes(selected.Username ?? string.Empty));
+            string password = Convert.ToBase64String(Encoding.UTF8.GetBytes(selected.RevealPassword()));
+            string result = await core.ExecuteScriptAsync(PasswordVaultSecurity.BuildFillScript(username, password));
+            if (!string.Equals(result, "\"filled\"", StringComparison.Ordinal))
+            {
+                MessageBox.Show(this, "El formulario cambió y no se pudo completar la contraseña.", "Bóveda de contraseñas");
+            }
+        }
+
+        private async Task InstallVaultAssistAsync(CoreWebView2 core, WebView2 web)
+        {
+            if (core == null || web == null || web.Source == null ||
+                (web.Source.Scheme != Uri.UriSchemeHttp && web.Source.Scheme != Uri.UriSchemeHttps))
+            {
+                return;
+            }
+
+            List<PasswordVaultEntry> matches = VaultEntriesForHost(web.Source.Host);
+            if (matches.Count > 0)
+            {
+                await core.ExecuteScriptAsync(PasswordVaultSecurity.BuildAssistScript(matches));
+            }
+        }
+
         private async Task<bool> VerifyVaultAccessAsync(string reason)
         {
             bool verified = await WindowsHelloVerifier.VerifyAsync(reason);
@@ -4687,7 +4741,8 @@ namespace GXLightBrowser
                 int availableCredentials = VaultEntriesForHost(web.Source.Host).Count;
                 if (availableCredentials > 0)
                 {
-                    tab.NavigationNotice = "Bóveda: " + availableCredentials + " credencial(es) disponible(s). Ctrl+Shift+L para rellenar.";
+                    tab.NavigationNotice = "Bóveda: selecciona una cuenta junto al campo de contraseña.";
+                    Task ignored = InstallVaultAssistAsync(core, web);
                 }
             }
             AddHistoryEntry(page, web);

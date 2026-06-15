@@ -9,6 +9,7 @@ Gan Browser debe tratar cualquier dato de navegacion como sensible. El proyecto 
 - Mantener las contrasenas de la boveda protegidas con DPAPI tambien mientras estan cargadas.
 - Exigir Windows Hello/PIN antes de visualizar, rellenar o exportar credenciales.
 - Rellenar solamente cuando el host coincide exactamente y nunca enviar el formulario.
+- Permitir solicitudes de desbloqueo solamente desde la pestana activa y con el navegador al frente.
 - Mantener telemetria propia desactivada: Gan Browser no envia historial, passwords ni uso.
 - Mostrar advertencia antes de exportar passwords a CSV, porque ese archivo queda en texto visible.
 - Descargar actualizaciones solamente desde el manifiesto y Releases oficiales del repositorio.

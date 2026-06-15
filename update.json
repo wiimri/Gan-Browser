@@ -1,14 +1,14 @@
 {
-  "version": "2.9",
-  "releaseName": "Gan Browser 2.9",
+  "version": "2.10",
+  "releaseName": "Gan Browser 2.10",
   "publishedAt": "2026-06-15",
   "downloadUrl": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe",
   "sha256Url": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt",
   "sourceUrl": "https://github.com/wiimri/Gan-Browser",
   "changelogUrl": "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md",
   "highlights": [
-    "La boveda permite ver y rellenar credenciales despues de aprobar Windows Hello/PIN.",
-    "El autocompletado exige coincidencia exacta del dominio y nunca envia el formulario.",
-    "Las contrasenas permanecen cifradas con DPAPI en disco y mientras estan cargadas."
+    "El usuario se rellena automaticamente al detectar credenciales compatibles.",
+    "Cada formulario muestra un selector de cuentas junto al campo de contrasena.",
+    "La contrasena solo se completa despues de seleccionar la cuenta y aprobar Windows Hello/PIN."
   ]
 }

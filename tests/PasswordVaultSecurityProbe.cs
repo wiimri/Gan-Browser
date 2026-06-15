@@ -25,6 +25,20 @@ internal static class PasswordVaultSecurityProbe
             return 1;
         }
 
+        System.Collections.Generic.List<PasswordVaultEntry> entries = new System.Collections.Generic.List<PasswordVaultEntry>();
+        PasswordVaultEntry assistEntry = new PasswordVaultEntry();
+        assistEntry.Name = "Example";
+        assistEntry.Username = "user@example.com";
+        entries.Add(assistEntry);
+        string assist = PasswordVaultSecurity.BuildAssistScript(entries);
+        if (assist.IndexOf("user@example.com", StringComparison.Ordinal) >= 0 ||
+            assist.IndexOf("ganvault:fill:", StringComparison.Ordinal) < 0 ||
+            assist.IndexOf("input[type=password]", StringComparison.Ordinal) < 0)
+        {
+            Console.Error.WriteLine("Password assist must expose only encoded account labels and require selection.");
+            return 1;
+        }
+
         PasswordVaultEntry entry = new PasswordVaultEntry();
         entry.SetPassword("secret-probe");
         if (entry.RevealPassword() != "secret-probe" ||
