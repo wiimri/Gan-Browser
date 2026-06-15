@@ -6,6 +6,9 @@ Gan Browser debe tratar cualquier dato de navegacion como sensible. El proyecto 
 - Permitir que WebView2 muestre su aviso nativo y guardar solo cuando el usuario acepta.
 - Conservar passwords nativas en el perfil persistente protegido por Windows.
 - Cifrar la boveda importada con Windows DPAPI para el usuario actual.
+- Mantener las contrasenas de la boveda protegidas con DPAPI tambien mientras estan cargadas.
+- Exigir Windows Hello/PIN antes de visualizar, rellenar o exportar credenciales.
+- Rellenar solamente cuando el host coincide exactamente y nunca enviar el formulario.
 - Mantener telemetria propia desactivada: Gan Browser no envia historial, passwords ni uso.
 - Mostrar advertencia antes de exportar passwords a CSV, porque ese archivo queda en texto visible.
 - Descargar actualizaciones solamente desde el manifiesto y Releases oficiales del repositorio.
@@ -14,7 +17,7 @@ Gan Browser debe tratar cualquier dato de navegacion como sensible. El proyecto 
 ## Prioridades recomendadas
 
 1. Firmar digitalmente el ejecutable y el instalador con certificado de firma de codigo y timestamp.
-2. Firmar `update.json` y verificar SHA-256 del instalador antes de ejecutarlo.
+2. Firmar `update.json`; el instalador ya se verifica mediante SHA-256 antes de ejecutarlo.
 3. Sustituir gradualmente el bloqueador prototipo por `brave/adblock-rust`.
 4. Crear permisos por sitio para camara, microfono, ubicacion, notificaciones y descargas.
 5. Agregar modo privado con un perfil WebView2 temporal que se elimine al cerrar.

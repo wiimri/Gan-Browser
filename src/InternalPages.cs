@@ -471,22 +471,27 @@ namespace GXLightBrowser
                 .Append(passwordSavingEnabled ? "activado" : "desactivado")
                 .Append("</b>.</p>");
             body.Append("<p>Gan Browser nunca guarda una credencial al escribirla. WebView2 muestra su aviso nativo despues de iniciar sesion y solo la conserva cuando eliges guardar.</p>");
-            body.Append("<p>Las credenciales nativas quedan cifradas por Windows dentro del perfil persistente. La boveda de importacion/exportacion tambien usa Windows DPAPI para el usuario actual.</p>");
-            body.Append("<p>Entradas importadas en la boveda: <b>").Append(passwordVault.Count).Append("</b>. Usa Menu &gt; Passwords and autofill para importar o exportar CSV.</p>");
+            body.Append("<p>Las credenciales nativas quedan cifradas por Windows dentro del perfil persistente. La boveda tambien usa Windows DPAPI para el usuario actual.</p>");
+            body.Append("<p>Para ver una contraseña o rellenar un sitio debes aprobar Windows Hello/PIN. Las contraseñas nunca se insertan en esta pagina interna.</p>");
+            body.Append("<p>Entradas importadas en la boveda: <b>").Append(passwordVault.Count).Append("</b>. Usa Menu &gt; Contraseñas y autocompletado para rellenar el sitio actual.</p>");
 
             if (passwordVault.Count == 0)
             {
                 return body.ToString();
             }
 
-            body.Append("<table><tr><th>Name</th><th>URL</th><th>Username</th><th>Imported</th></tr>");
+            body.Append("<table><tr><th>Name</th><th>URL</th><th>Username</th><th>Imported</th><th>Acciones</th></tr>");
             for (int i = 0; i < passwordVault.Count; i++)
             {
                 PasswordVaultEntry entry = passwordVault[i];
+                string encodedUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(entry.Url ?? string.Empty));
                 body.Append("<tr><td>").Append(EscapeHtml(entry.Name)).Append("</td><td>")
                     .Append(EscapeHtml(entry.Url)).Append("</td><td>")
                     .Append(EscapeHtml(entry.Username)).Append("</td><td>")
-                    .Append(entry.ImportedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")).Append("</td></tr>");
+                    .Append(entry.ImportedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")).Append("</td><td>")
+                    .Append("<button onclick=\"chrome.webview.postMessage('gxlight:passwords:open:").Append(encodedUrl).Append("')\">Abrir</button> ")
+                    .Append("<button onclick=\"chrome.webview.postMessage('gxlight:passwords:view:").Append(i).Append("')\">Ver</button>")
+                    .Append("</td></tr>");
             }
             body.Append("</table>");
             return body.ToString();

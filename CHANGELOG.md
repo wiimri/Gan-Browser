@@ -4,7 +4,7 @@ Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Li
 
 ## Version actual
 
-- Version publicada: `2.8`
+- Version publicada: `2.9`
 - Fecha: `2026-06-15`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
@@ -20,6 +20,20 @@ https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
 Ese archivo indica cual es la version publicada, el nombre de la release, los enlaces y las novedades que debe mostrar `gxlight://updated`.
 
 Si GitHub no responde, Gan Browser usa las notas locales compiladas como respaldo.
+
+## v2.9 - Boveda util con Windows Hello
+
+Fecha: `2026-06-15`
+
+Cambios:
+
+- La pagina de contrasenas permite abrir una entrada y visualizarla despues de aprobar Windows Hello/PIN.
+- Se agrega `Rellenar sitio actual desde la boveda` al menu de contrasenas.
+- La barra de estado avisa cuando hay credenciales compatibles y `Ctrl+Shift+L` inicia el rellenado.
+- El rellenado exige coincidencia exacta del host, requiere Windows Hello/PIN y nunca envia el formulario.
+- Exportar toda la boveda tambien requiere verificar la identidad.
+- Las contrasenas permanecen protegidas con DPAPI incluso mientras las entradas estan cargadas en memoria.
+- Se agrego una prueba que rechaza coincidencias de dominio inseguras y cualquier intento de enviar formularios.
 
 ## v2.8 - Cierre seguro de pestanas con favicon
 

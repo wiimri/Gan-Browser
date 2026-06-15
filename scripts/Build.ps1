@@ -32,6 +32,10 @@ if (!(Test-Path $Csc)) {
 $Core = Join-Path $PkgDir "lib\net462\Microsoft.Web.WebView2.Core.dll"
 $WinForms = Join-Path $PkgDir "lib\net462\Microsoft.Web.WebView2.WinForms.dll"
 $Loader = Join-Path $PkgDir "runtimes\win-x64\native\WebView2Loader.dll"
+$WindowsSecurity = Join-Path $env:WINDIR "System32\WinMetadata\Windows.Security.winmd"
+$WindowsFoundation = Join-Path $env:WINDIR "System32\WinMetadata\Windows.Foundation.winmd"
+$WindowsRuntime = Join-Path $env:WINDIR "Microsoft.NET\assembly\GAC_MSIL\System.Runtime.WindowsRuntime\v4.0_4.0.0.0__b77a5c561934e089\System.Runtime.WindowsRuntime.dll"
+$SystemRuntime = Join-Path $env:WINDIR "Microsoft.NET\assembly\GAC_MSIL\System.Runtime\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Runtime.dll"
 
 if (!(Test-Path $Core) -or !(Test-Path $WinForms) -or !(Test-Path $Loader)) {
     throw "The WebView2 package layout was not recognized. Check version $WebView2Version."
@@ -58,6 +62,10 @@ if (!(Test-Path $Icon)) {
     /reference:System.Runtime.Serialization.dll `
     /reference:System.Security.dll `
     /reference:System.Windows.Forms.dll `
+    /reference:$SystemRuntime `
+    /reference:$WindowsSecurity `
+    /reference:$WindowsFoundation `
+    /reference:$WindowsRuntime `
     /reference:$Core `
     /reference:$WinForms `
     $Sources

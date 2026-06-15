@@ -1,14 +1,14 @@
 {
-  "version": "2.8",
-  "releaseName": "Gan Browser 2.8",
+  "version": "2.9",
+  "releaseName": "Gan Browser 2.9",
   "publishedAt": "2026-06-15",
   "downloadUrl": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe",
   "sha256Url": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt",
   "sourceUrl": "https://github.com/wiimri/Gan-Browser",
   "changelogUrl": "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md",
   "highlights": [
-    "Los favicons de las pestanas se dibujan desde copias seguras independientes.",
-    "Los controles retirados de la barra de pestanas se liberan correctamente.",
-    "Se evita la excepcion de dibujo que podia aparecer al cerrar una pestana."
+    "La boveda permite ver y rellenar credenciales despues de aprobar Windows Hello/PIN.",
+    "El autocompletado exige coincidencia exacta del dominio y nunca envia el formulario.",
+    "Las contrasenas permanecen cifradas con DPAPI en disco y mientras estan cargadas."
   ]
 }

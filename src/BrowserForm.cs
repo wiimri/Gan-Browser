@@ -516,6 +516,11 @@ namespace GXLightBrowser
                 AddCurrentBookmark();
                 return true;
             }
+            if (keyData == (Keys.Control | Keys.Shift | Keys.L))
+            {
+                Task ignored = FillCurrentSiteFromVaultAsync();
+                return true;
+            }
             if (keyData == (Keys.Control | Keys.F))
             {
                 ExecuteFind();
@@ -549,6 +554,7 @@ namespace GXLightBrowser
                 keyData == (Keys.Control | Keys.J) ||
                 keyData == (Keys.Control | Keys.H) ||
                 keyData == (Keys.Control | Keys.D) ||
+                keyData == (Keys.Control | Keys.Shift | Keys.L) ||
                 keyData == (Keys.Control | Keys.F) ||
                 keyData == (Keys.Control | Keys.R) ||
                 keyData == (Keys.Control | Keys.N) ||
@@ -1043,6 +1049,24 @@ namespace GXLightBrowser
             if (string.Equals(message, "gxlight:update:prepare", StringComparison.Ordinal))
             {
                 Task ignored = CheckForUpdatesAsync(true);
+                return;
+            }
+
+            const string passwordOpenPrefix = "gxlight:passwords:open:";
+            if (message.StartsWith(passwordOpenPrefix, StringComparison.Ordinal))
+            {
+                NavigateActive(Base64Decode(message.Substring(passwordOpenPrefix.Length)));
+                return;
+            }
+
+            const string passwordViewPrefix = "gxlight:passwords:view:";
+            if (message.StartsWith(passwordViewPrefix, StringComparison.Ordinal))
+            {
+                int index;
+                if (int.TryParse(message.Substring(passwordViewPrefix.Length), out index))
+                {
+                    Task ignored = ViewVaultCredentialAsync(index);
+                }
                 return;
             }
 
@@ -1781,6 +1805,7 @@ namespace GXLightBrowser
             passwords.DropDownItems.Add(passwordAutosave);
             passwords.DropDownItems.Add(new ToolStripSeparator());
             passwords.DropDownItems.Add(CreateMenuItem("Ajustes de contraseñas", "", delegate { NavigateInternal("passwords"); }));
+            passwords.DropDownItems.Add(CreateMenuItem("Rellenar sitio actual desde la bóveda...", "Ctrl+Shift+L", async delegate { await FillCurrentSiteFromVaultAsync(); }));
             passwords.DropDownItems.Add(CreateMenuItem("Importar contraseñas CSV...", "", delegate { ImportPasswords(); }));
             passwords.DropDownItems.Add(CreateMenuItem("Exportar contraseñas CSV...", "", delegate { ExportPasswords(); }));
             passwords.DropDownItems.Add(CreateMenuItem("Exportar plantilla CSV...", "", delegate { ExportPasswordTemplate(); }));
@@ -2854,7 +2879,7 @@ namespace GXLightBrowser
                         entry.Name = parts[0];
                         entry.Url = parts[1];
                         entry.Username = parts[2];
-                        entry.Password = parts[3];
+                        entry.SetPassword(parts[3]);
                         entry.Note = parts.Length > 4 ? parts[4] : string.Empty;
                         entry.ImportedUtc = parts.Length > 5 ? new DateTime(ParseLong(parts[5], DateTime.UtcNow.Ticks), DateTimeKind.Utc) : DateTime.UtcNow;
                         _passwordVault.Add(entry);
@@ -2874,10 +2899,17 @@ namespace GXLightBrowser
             {
                 PasswordVaultEntry entry = _passwordVault[i];
                 string csv = CsvEscape(entry.Name) + "," + CsvEscape(entry.Url) + "," + CsvEscape(entry.Username) + "," +
-                    CsvEscape(entry.Password) + "," + CsvEscape(entry.Note) + "," + entry.ImportedUtc.Ticks.ToString();
+                    CsvEscape(entry.RevealPassword()) + "," + CsvEscape(entry.Note) + "," + entry.ImportedUtc.Ticks.ToString();
                 byte[] clearBytes = Encoding.UTF8.GetBytes(csv);
-                byte[] protectedBytes = ProtectedData.Protect(clearBytes, null, DataProtectionScope.CurrentUser);
-                builder.AppendLine(Convert.ToBase64String(protectedBytes));
+                try
+                {
+                    byte[] protectedBytes = ProtectedData.Protect(clearBytes, null, DataProtectionScope.CurrentUser);
+                    builder.AppendLine(Convert.ToBase64String(protectedBytes));
+                }
+                finally
+                {
+                    Array.Clear(clearBytes, 0, clearBytes.Length);
+                }
             }
             File.WriteAllText(AppPaths.PasswordVault, builder.ToString(), Encoding.UTF8);
         }
@@ -2914,7 +2946,7 @@ namespace GXLightBrowser
                         entry.Name = parts[0];
                         entry.Url = parts[1];
                         entry.Username = parts[2];
-                        entry.Password = parts[3];
+                        entry.SetPassword(parts[3]);
                         entry.Note = parts.Length > 4 ? parts[4] : string.Empty;
                         entry.ImportedUtc = DateTime.UtcNow;
                         _passwordVault.Add(entry);
@@ -2922,8 +2954,8 @@ namespace GXLightBrowser
                     }
 
                     SavePasswordVault();
-                    MessageBox.Show(this, "Passwords importadas a la boveda local: " + added + Environment.NewLine +
-                        "Nota: WebView2 no permite inyectarlas directo al gestor nativo/autofill.", "Passwords");
+                    MessageBox.Show(this, "Contraseñas importadas a la bóveda local: " + added + Environment.NewLine +
+                        "Usa el menú Contraseñas y autocompletado para rellenar un sitio después de aprobar Windows Hello/PIN.", "Contraseñas");
                 }
                 catch (Exception ex)
                 {
@@ -2932,8 +2964,13 @@ namespace GXLightBrowser
             }
         }
 
-        private void ExportPasswords()
+        private async void ExportPasswords()
         {
+            if (!await VerifyVaultAccessAsync("Exportar todas las contraseñas de Gan Browser"))
+            {
+                return;
+            }
+
             using (SaveFileDialog dialog = new SaveFileDialog())
             {
                 dialog.Title = "Exportar passwords CSV";
@@ -2954,7 +2991,7 @@ namespace GXLightBrowser
                         csv.Append(CsvEscape(entry.Name)).Append(',')
                             .Append(CsvEscape(entry.Url)).Append(',')
                             .Append(CsvEscape(entry.Username)).Append(',')
-                            .Append(CsvEscape(entry.Password)).Append(',')
+                            .Append(CsvEscape(entry.RevealPassword())).Append(',')
                             .Append(CsvEscape(entry.Note)).AppendLine();
                     }
                     File.WriteAllText(dialog.FileName, csv.ToString(), Encoding.UTF8);
@@ -2981,6 +3018,97 @@ namespace GXLightBrowser
 
                 File.WriteAllText(dialog.FileName, "name,url,username,password,note" + Environment.NewLine, Encoding.UTF8);
                 MessageBox.Show(this, "Plantilla CSV exportada.", "Passwords");
+            }
+        }
+
+        private async Task ViewVaultCredentialAsync(int index)
+        {
+            if (index < 0 || index >= _passwordVault.Count)
+            {
+                return;
+            }
+
+            if (!await VerifyVaultAccessAsync("Ver una contraseña guardada en Gan Browser"))
+            {
+                return;
+            }
+
+            using (CredentialViewerDialog dialog = new CredentialViewerDialog(_passwordVault[index]))
+            {
+                dialog.ShowDialog(this);
+            }
+        }
+
+        private async Task FillCurrentSiteFromVaultAsync()
+        {
+            WebView2 web = ActiveWebView();
+            if (web == null || web.CoreWebView2 == null || web.Source == null ||
+                (web.Source.Scheme != Uri.UriSchemeHttp && web.Source.Scheme != Uri.UriSchemeHttps))
+            {
+                MessageBox.Show(this, "Abre primero el formulario de inicio de sesión que deseas rellenar.", "Bóveda de contraseñas");
+                return;
+            }
+
+            List<PasswordVaultEntry> matches = VaultEntriesForHost(web.Source.Host);
+            if (matches.Count == 0)
+            {
+                MessageBox.Show(this, "No hay credenciales de la bóveda para " + web.Source.Host + ".", "Bóveda de contraseñas");
+                return;
+            }
+
+            PasswordVaultEntry selected = SelectVaultEntry(matches, web.Source.Host);
+            if (selected == null || !await VerifyVaultAccessAsync("Rellenar credenciales en " + web.Source.Host))
+            {
+                return;
+            }
+
+            string username = Convert.ToBase64String(Encoding.UTF8.GetBytes(selected.Username ?? string.Empty));
+            string password = Convert.ToBase64String(Encoding.UTF8.GetBytes(selected.RevealPassword()));
+            string script = PasswordVaultSecurity.BuildFillScript(username, password);
+            string result = await web.CoreWebView2.ExecuteScriptAsync(script);
+            if (string.Equals(result, "\"filled\"", StringComparison.Ordinal))
+            {
+                MessageBox.Show(this, "Usuario y contraseña rellenados. Revisa el formulario antes de iniciar sesión.", "Bóveda de contraseñas");
+            }
+            else
+            {
+                MessageBox.Show(this, "No se encontraron campos compatibles de usuario y contraseña en esta página.", "Bóveda de contraseñas");
+            }
+        }
+
+        private async Task<bool> VerifyVaultAccessAsync(string reason)
+        {
+            bool verified = await WindowsHelloVerifier.VerifyAsync(reason);
+            if (!verified)
+            {
+                MessageBox.Show(this, "Windows Hello/PIN no verificó tu identidad. La bóveda permanece bloqueada.", "Bóveda de contraseñas");
+            }
+            return verified;
+        }
+
+        private List<PasswordVaultEntry> VaultEntriesForHost(string host)
+        {
+            List<PasswordVaultEntry> matches = new List<PasswordVaultEntry>();
+            for (int i = 0; i < _passwordVault.Count; i++)
+            {
+                if (PasswordVaultSecurity.MatchesExactHost(_passwordVault[i].Url, host))
+                {
+                    matches.Add(_passwordVault[i]);
+                }
+            }
+            return matches;
+        }
+
+        private PasswordVaultEntry SelectVaultEntry(List<PasswordVaultEntry> matches, string host)
+        {
+            if (matches.Count == 1)
+            {
+                return matches[0];
+            }
+
+            using (CredentialSelectionDialog dialog = new CredentialSelectionDialog(matches, host))
+            {
+                return dialog.ShowDialog(this) == DialogResult.OK ? dialog.SelectedEntry : null;
             }
         }
 
@@ -4552,6 +4680,15 @@ namespace GXLightBrowser
             if (web.Source != null && IsYouTubeHost(web.Source.Host))
             {
                 core.ExecuteScriptAsync("window.__gxLightRunYouTubeShields && window.__gxLightRunYouTubeShields();");
+            }
+            if (tab != null && web.Source != null &&
+                (web.Source.Scheme == Uri.UriSchemeHttp || web.Source.Scheme == Uri.UriSchemeHttps))
+            {
+                int availableCredentials = VaultEntriesForHost(web.Source.Host).Count;
+                if (availableCredentials > 0)
+                {
+                    tab.NavigationNotice = "Bóveda: " + availableCredentials + " credencial(es) disponible(s). Ctrl+Shift+L para rellenar.";
+                }
             }
             AddHistoryEntry(page, web);
             BrowserTab completedTab = page.Tag as BrowserTab;

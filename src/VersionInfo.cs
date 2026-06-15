@@ -2,16 +2,16 @@ namespace GXLightBrowser
 {
     internal static class VersionInfo
     {
-        public const string CurrentVersion = "2.8";
-        public const string ReleaseName = "Gan Browser 2.8";
+        public const string CurrentVersion = "2.9";
+        public const string ReleaseName = "Gan Browser 2.9";
 
         public static string[] Highlights()
         {
             return new string[]
             {
-                "Los favicons de las pestanas se dibujan desde copias seguras independientes.",
-                "Los controles retirados de la barra de pestanas se liberan correctamente.",
-                "Se evita la excepcion de dibujo que podia aparecer al cerrar una pestana."
+                "La boveda permite ver y rellenar credenciales despues de aprobar Windows Hello/PIN.",
+                "El autocompletado exige coincidencia exacta del dominio y nunca envia el formulario.",
+                "Las contrasenas permanecen cifradas con DPAPI en disco y mientras estan cargadas."
             };
         }
     }

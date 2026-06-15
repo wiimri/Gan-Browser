@@ -1,6 +1,6 @@
 # Gan Browser
 
-Version actual: `2.8`
+Version actual: `2.9`
 
 Gan Browser es un navegador liviano y enfocado en privacidad para Windows. Usa WebView2 para aprovechar el runtime del sistema y reducir el consumo frente a alternativas basadas en Electron.
 
@@ -63,7 +63,7 @@ Usa Microsoft Edge WebView2 en vez de Electron. Eso permite que la aplicacion se
 
 Gan Browser usa versiones simples pensadas para el proyecto personal:
 
-- linea estable actual: `2.8`
+- linea estable actual: `2.9`
 - cada mejora o correccion del navegador sube la version menor: `2.1`, `2.2`, `2.3` ...
 
 Cuando una nueva version se ejecuta por primera vez, el navegador abre `gxlight://updated` con un resumen corto. La app guarda la ultima version vista en `%LOCALAPPDATA%\GXLightBrowser\settings.ini`, por lo que esa pestana aparece solo una vez por version.
@@ -133,7 +133,7 @@ compatibilidad y reparacion en Atlas OS.
 Para publicar el instalador como asset de GitHub Release usando la credencial segura de Git:
 
 ```powershell
-.\scripts\Publish-Release.ps1 -Version 2.8
+.\scripts\Publish-Release.ps1 -Version 2.9
 ```
 
 El script valida que navegador, instalador, manifiesto, paquetes y bitacora usen la misma version. Tambien
@@ -143,7 +143,7 @@ permanente `GanBrowser-Setup-x64.sha256.txt`.
 Antes de publicar se puede ejecutar solamente la comprobacion:
 
 ```powershell
-.\scripts\Verify-Release.ps1 -Version 2.8 -RequireAssets
+.\scripts\Verify-Release.ps1 -Version 2.9 -RequireAssets
 ```
 
 El instalador y su comprobacion SHA-256 permanentes pueden descargarse desde:
@@ -155,7 +155,7 @@ https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-
 
 ## Compatibilidad del cambio de nombre
 
-Gan Browser `2.8` conserva temporalmente varios identificadores internos de GX Light Browser para que la actualizacion no pierda datos:
+Gan Browser `2.9` conserva temporalmente varios identificadores internos de GX Light Browser para que la actualizacion no pierda datos:
 
 - perfil y configuracion en `%LOCALAPPDATA%\GXLightBrowser`
 - ejecutable interno `GXLightBrowser.exe`
@@ -203,13 +203,16 @@ El aviso nativo para guardar passwords y el autofill de WebView2 estan habilitad
 preferencia. Gan Browser nunca captura passwords mediante JavaScript ni las guarda al escribirlas: WebView2
 solo las conserva despues de que el usuario acepta su popup nativo.
 
-Gan Browser tambien incluye una boveda local para importar/exportar passwords:
+Gan Browser tambien incluye una boveda local para importar, visualizar y rellenar passwords:
 
 - formato CSV: `name,url,username,password,note`
 - las entradas importadas se guardan cifradas para el usuario actual de Windows con DPAPI
+- las contrasenas permanecen protegidas con DPAPI mientras estan cargadas en memoria
+- visualizar, rellenar o exportar exige aprobar Windows Hello/PIN
+- el rellenado solo se habilita cuando el dominio coincide exactamente y nunca envia el formulario
 - al exportar se genera un CSV normal en texto visible, asi que hay que tratarlo con cuidado
 
-Importante: WebView2 no expone una API publica para inyectar passwords importadas directamente en su gestor nativo. La boveda de Gan Browser sirve como companera de import/export; WebView2 sigue manejando el guardado y autofill normal durante la navegacion.
+Usa `Ctrl+Shift+L` o `Menu > Contraseñas y autocompletado > Rellenar sitio actual desde la boveda` sobre una pagina de inicio de sesion. La barra de estado avisa cuando existen credenciales para el dominio actual. WebView2 sigue manejando por separado su guardado y autofill nativos.
 
 La hoja de ruta y recomendaciones estan documentadas en [docs/SEGURIDAD.md](docs/SEGURIDAD.md).
 
