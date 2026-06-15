@@ -4,7 +4,7 @@ Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Li
 
 ## Version actual
 
-- Version publicada: `2.3`
+- Version publicada: `2.4`
 - Fecha: `2026-06-15`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
@@ -20,6 +20,18 @@ https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
 Ese archivo indica cual es la version publicada, el nombre de la release, los enlaces y las novedades que debe mostrar `gxlight://updated`.
 
 Si GitHub no responde, Gan Browser usa las notas locales compiladas como respaldo.
+
+## v2.4 - Navegacion sin borde y bookmarks completos
+
+Fecha: `2026-06-15`
+
+Cambios:
+
+- Se reemplazo el contenedor nativo de paginas por una variante sin marco visual.
+- Se elimina el borde blanco que rodeaba el contenido web y reducia el area de navegacion.
+- La barra de marcadores reserva la altura real necesaria para mostrar botones completos.
+- Las paginas y WebView ocupan todo el espacio disponible sin margenes internos.
+- Se agrego una prueba de layout para impedir que reaparezca el borde nativo del contenido.
 
 ## v2.3 - Actualizaciones robustas desde GitHub
 

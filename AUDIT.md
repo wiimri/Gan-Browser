@@ -6,6 +6,7 @@ Version actual: 2.1
 
 ## Revision de mantenimiento 2026-06-15
 
+- Version `2.4`: eliminado el borde blanco nativo del contenido y corregida la altura de bookmarks.
 - Version `2.3`: el actualizador tolera conexiones cerradas, reintenta y elimina descargas parciales.
 - Version `2.2`: corregida la barra de marcadores recortada y agregada opcion persistente para mostrarla u ocultarla.
 - El publicador de releases ahora reintenta cargas de artefactos interrumpidas.

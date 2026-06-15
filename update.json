@@ -1,14 +1,14 @@
 {
-  "version": "2.3",
-  "releaseName": "Gan Browser 2.3",
+  "version": "2.4",
+  "releaseName": "Gan Browser 2.4",
   "publishedAt": "2026-06-15",
   "downloadUrl": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe",
   "sha256Url": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt",
   "sourceUrl": "https://github.com/wiimri/Gan-Browser",
   "changelogUrl": "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md",
   "highlights": [
-    "El actualizador reintenta automaticamente las descargas interrumpidas desde GitHub.",
-    "Los instaladores parciales o vacios se eliminan antes de volver a descargar.",
-    "Se mejora el registro de errores transitorios durante la actualizacion."
+    "Se elimina el borde blanco nativo alrededor del contenido web.",
+    "La barra de marcadores ahora muestra sus botones completos sin recortes.",
+    "La navegacion aprovecha correctamente todo el espacio disponible."
   ]
 }

@@ -1,6 +1,6 @@
 {
   "name": "gan-browser",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Gan Browser is a lightweight, privacy-focused Windows browser built on WebView2.",
   "main": "index.js",
   "directories": {

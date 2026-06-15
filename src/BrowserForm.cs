@@ -23,7 +23,7 @@ namespace GXLightBrowser
         private readonly AdBlocker _adBlocker = new AdBlocker();
         private readonly PrivacyFirewall _privacyFirewall = new PrivacyFirewall();
         private readonly ExtensionImporter _extensionImporter = new ExtensionImporter();
-        private readonly TabControl _tabs = new TabControl();
+        private readonly BorderlessTabControl _tabs = new BorderlessTabControl();
         private readonly FlowLayoutPanel _tabStrip = new FlowLayoutPanel();
         private readonly FlowLayoutPanel _bookmarksBar = new FlowLayoutPanel();
         private readonly TextBox _address = new TextBox();
@@ -214,6 +214,7 @@ namespace GXLightBrowser
             _tabs.SizeMode = TabSizeMode.Fixed;
             _tabs.ItemSize = new Size(0, 1);
             _tabs.Padding = new Point(0, 0);
+            _tabs.Margin = new Padding(0);
             _tabs.BackColor = Theme.Window;
             _rootLayout.Controls.Add(_tabs, 1, 1);
 
@@ -708,6 +709,8 @@ namespace GXLightBrowser
         {
             TabPage page = new TabPage("Nueva pestana");
             page.BackColor = Theme.Window;
+            page.Margin = new Padding(0);
+            page.Padding = new Padding(0);
 
             WebView2 web = new WebView2();
             web.Dock = DockStyle.Fill;
@@ -5138,7 +5141,7 @@ namespace GXLightBrowser
             
             int tabStripHeight = 22;
             int navHeight = 30;
-            int bookmarksHeight = _appSettings.ShowBookmarksBar ? 24 : 0;
+            int bookmarksHeight = _appSettings.ShowBookmarksBar ? 28 : 0;
             int topbarPadding = _appSettings.ShowBookmarksBar ? 8 : 4;
             int topbarHeight = tabStripHeight + navHeight + bookmarksHeight + topbarPadding;
 

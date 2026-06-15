@@ -31,8 +31,8 @@ function verifyInternalPageRoutes() {
   const buildInstaller = fs.readFileSync(path.join(root, "scripts", "Build-Installer.ps1"), "utf8");
   const requirements = [
     [browserForm.includes('Text = "Gan Browser"'), "Gan Browser window branding is missing"],
-    [versionInfo.includes('CurrentVersion = "2.3"'), "Gan Browser 2.3 version is missing"],
-    [versionInfo.includes('ReleaseName = "Gan Browser 2.3"'), "Gan Browser release name is missing"],
+    [versionInfo.includes('CurrentVersion = "2.4"'), "Gan Browser 2.4 version is missing"],
+    [versionInfo.includes('ReleaseName = "Gan Browser 2.4"'), "Gan Browser release name is missing"],
     [updateJson.sourceUrl === "https://github.com/wiimri/Gan-Browser", "update manifest repository is incorrect"],
     [updateJson.downloadUrl.endsWith("/GanBrowser-Setup-x64.exe"), "Gan permanent installer URL is incorrect"],
     [updateJson.sha256Url.endsWith("/GanBrowser-Setup-x64.sha256.txt"), "Gan installer SHA-256 URL is incorrect"],
@@ -59,6 +59,8 @@ function verifyInternalPageRoutes() {
     [browserForm.includes("SetBookmarksBarVisible"), "bookmarks bar visibility persistence is missing"],
     [browserForm.includes("_topLayout.RowStyles[2].Height = bookmarksHeight"), "bookmarks bar fixed-height layout is missing"],
     [browserForm.includes("_topLayout.Padding = new Padding(6, 4, 8, 0)"), "hidden bookmarks bar still reserves bottom padding"],
+    [browserForm.includes("new BorderlessTabControl()"), "native TabControl border is still visible around web content"],
+    [browserForm.includes("ShowBookmarksBar ? 28 : 0"), "bookmarks bar does not reserve enough height for its controls"],
     [browserForm.includes("string.IsNullOrWhiteSpace(manifest.Sha256Url) || !VerifyInstallerHash"), "updates without SHA-256 are not rejected"],
     [browserForm.includes("/RELAUNCH"), "update relaunch argument is missing"],
     [internalPages.includes("gxlight:update:prepare"), "update preparation action is missing"],

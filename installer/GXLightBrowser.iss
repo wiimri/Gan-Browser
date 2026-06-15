@@ -1,5 +1,5 @@
 #define MyAppName "Gan Browser"
-#define MyAppVersion "2.3"
+#define MyAppVersion "2.4"
 #define MyAppPublisher "wiimri"
 #define MyAppURL "https://github.com/wiimri/Gan-Browser"
 #define MyAppExeName "GXLightBrowser.exe"

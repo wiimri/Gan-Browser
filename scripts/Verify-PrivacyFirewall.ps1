@@ -3,6 +3,7 @@ $Root = Split-Path -Parent $PSScriptRoot
 $Bin = Join-Path $Root "bin"
 $Out = Join-Path $Bin "PrivacyFirewallProbe.exe"
 $AdBlockerOut = Join-Path $Bin "AdBlockerProbe.exe"
+$LayoutOut = Join-Path $Bin "LayoutProbe.exe"
 $Csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 
 if (!(Test-Path $Csc)) {
@@ -39,4 +40,21 @@ if ($LASTEXITCODE -ne 0) {
 & $AdBlockerOut
 if ($LASTEXITCODE -ne 0) {
     throw "Ad blocker probe failed with exit code $LASTEXITCODE."
+}
+
+& $Csc /nologo /target:exe /platform:x64 `
+    /out:$LayoutOut `
+    /reference:System.dll `
+    /reference:System.Drawing.dll `
+    /reference:System.Windows.Forms.dll `
+    (Join-Path $Root "src\BorderlessTabControl.cs") `
+    (Join-Path $Root "tests\LayoutProbe.cs")
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Layout probe compilation failed with exit code $LASTEXITCODE."
+}
+
+& $LayoutOut
+if ($LASTEXITCODE -ne 0) {
+    throw "Layout probe failed with exit code $LASTEXITCODE."
 }
