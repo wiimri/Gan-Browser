@@ -261,8 +261,8 @@ namespace GXLightBrowser
                 }
             };
 
-            _newTab.Click += async delegate { await CreateTabAsync("about:blank"); };
-            _tabStripNewTab.Click += async delegate { await CreateTabAsync("about:blank"); };
+            _newTab.Click += async delegate { await CreateTabAsync(HomeUrl); };
+            _tabStripNewTab.Click += async delegate { await CreateTabAsync(HomeUrl); };
             _shield.Click += delegate
             {
                 _adBlockEnabled = !_adBlockEnabled;
@@ -487,7 +487,7 @@ namespace GXLightBrowser
             }
             if (keyData == (Keys.Control | Keys.T))
             {
-                Task ignored = CreateTabAsync("about:blank");
+                Task ignored = CreateTabAsync(HomeUrl);
                 return true;
             }
             if (keyData == (Keys.Alt | Keys.T))
@@ -738,12 +738,17 @@ namespace GXLightBrowser
 
             await web.EnsureCoreWebView2Async(_environment);
             ConfigureWebView(page, web);
-            if (!string.IsNullOrWhiteSpace(url))
+            await PrepareNewTabSurfaceAsync(web);
+            _tabs.SelectedTab = page;
+
+            if (!string.IsNullOrWhiteSpace(url) && !string.Equals(url, HomeUrl, StringComparison.OrdinalIgnoreCase))
             {
                 Navigate(web, url);
             }
-
-            _tabs.SelectedTab = page;
+            else
+            {
+                _address.Text = HomeUrl;
+            }
 
             ApplyTabResourcePolicy();
             EnforceLowResourceLimit();
@@ -760,6 +765,21 @@ namespace GXLightBrowser
             }
 
             return tab;
+        }
+
+        private async Task PrepareNewTabSurfaceAsync(WebView2 web)
+        {
+            TaskCompletionSource<bool> ready = new TaskCompletionSource<bool>();
+            EventHandler<CoreWebView2NavigationCompletedEventArgs> completed = null;
+            completed = delegate
+            {
+                ready.TrySetResult(true);
+            };
+
+            web.CoreWebView2.NavigationCompleted += completed;
+            web.NavigateToString(InternalPages.HomeHtml(_appSettings));
+            await Task.WhenAny(ready.Task, Task.Delay(2000));
+            web.CoreWebView2.NavigationCompleted -= completed;
         }
 
         private void ConfigureWebView(TabPage page, WebView2 web)
@@ -1715,7 +1735,7 @@ namespace GXLightBrowser
         {
             ContextMenuStrip menu = CreateContextMenu();
 
-            menu.Items.Add(CreateMenuItem("Nueva pestaña", "Ctrl+T", async delegate { await CreateTabAsync("about:blank"); }));
+            menu.Items.Add(CreateMenuItem("Nueva pestaña", "Ctrl+T", async delegate { await CreateTabAsync(HomeUrl); }));
             menu.Items.Add(CreateMenuItem("Nueva pestaña en isla", "Alt+T", async delegate { await CreateNewIslandTabAsync(); }));
             menu.Items.Add(CreateMenuItem("Nueva ventana", "Ctrl+N", delegate { StartNewWindow(); }));
             menu.Items.Add(CreateMenuItem("Nueva ventana privada", "Ctrl+Shift+N", delegate { MessageBox.Show(this, "El modo privado aún no está implementado.", "Gan Browser"); }));
@@ -3497,17 +3517,39 @@ namespace GXLightBrowser
             int nextIndex = closedIndex < _tabs.TabPages.Count - 1 ? closedIndex + 1 : closedIndex - 1;
             TabPage nextPage = nextIndex >= 0 ? _tabs.TabPages[nextIndex] : null;
 
-            _tabs.SuspendLayout();
             if (nextPage != null)
             {
                 _tabs.SelectedTab = nextPage;
+                BrowserTab nextTab = nextPage.Tag as BrowserTab;
+                if (nextTab != null && nextTab.WebView != null)
+                {
+                    nextTab.WebView.BringToFront();
+                    nextTab.WebView.Focus();
+                }
             }
             page.Visible = false;
+            BeginInvoke((MethodInvoker)delegate { DisposeClosedTab(page, tab); });
+
+            ApplyTabResourcePolicy();
+            RebuildTabStrip();
+            SyncAddress();
+            UpdateStatus();
+            SaveSession();
+        }
+
+        private void DisposeClosedTab(TabPage page, BrowserTab tab)
+        {
+            if (page == null || page.IsDisposed)
+            {
+                return;
+            }
+
             _tabs.TabPages.Remove(page);
             if (tab != null && tab.WebView != null)
             {
                 UnsubscribeWebViewEvents(tab.WebView);
                 tab.WebView.Dispose();
+                tab.WebView = null;
             }
             if (tab != null && tab.Favicon != null)
             {
@@ -3515,13 +3557,6 @@ namespace GXLightBrowser
                 tab.Favicon = null;
             }
             page.Dispose();
-            _tabs.ResumeLayout(true);
-
-            ApplyTabResourcePolicy();
-            RebuildTabStrip();
-            SyncAddress();
-            UpdateStatus();
-            SaveSession();
         }
 
         private void ApplyTabResourcePolicy()

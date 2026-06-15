@@ -6,6 +6,7 @@ Version actual: 2.1
 
 ## Revision de mantenimiento 2026-06-15
 
+- Version `2.6`: eliminado `about:blank` del flujo normal y diferida la destruccion visual al cerrar.
 - Version `2.5`: optimizadas transiciones de pestanas y agregadas acciones de triple/doble clic.
 - Version `2.4`: eliminado el borde blanco nativo del contenido y corregida la altura de bookmarks.
 - Version `2.3`: el actualizador tolera conexiones cerradas, reintenta y elimina descargas parciales.

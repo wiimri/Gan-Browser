@@ -241,6 +241,8 @@
   </nav>
   <script>
     const tabs = document.querySelector('.tabs');
+    const content = document.querySelector('.content');
+    content.dataset.transitionState = 'content';
     function makeTab(title) {
       const button = document.createElement('button');
       button.className = 'tab';
@@ -248,10 +250,12 @@
       button.innerHTML = `<span class="favicon" style="background:hsl(${title.length * 31 % 360} 70% 55%)"></span><span>${title}</span><span class="close">x</span>`;
       wireTab(button);
       tabs.insertBefore(button, document.querySelector('.add-tab'));
+      content.dataset.transitionState = 'content';
     }
     function wireTab(tab) {
       tab.addEventListener('click', (event) => {
         if (event.target.classList.contains('close')) {
+          content.dataset.transitionState = 'content';
           tab.remove();
           return;
         }

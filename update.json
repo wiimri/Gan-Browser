@@ -1,14 +1,14 @@
 {
-  "version": "2.5",
-  "releaseName": "Gan Browser 2.5",
+  "version": "2.6",
+  "releaseName": "Gan Browser 2.6",
   "publishedAt": "2026-06-15",
   "downloadUrl": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe",
   "sha256Url": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt",
   "sourceUrl": "https://github.com/wiimri/Gan-Browser",
   "changelogUrl": "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md",
   "highlights": [
-    "Abrir y cerrar pestanas conserva el contenido visible durante la transicion.",
-    "Triple clic en la barra de direcciones selecciona todo el texto.",
-    "Doble clic en una descarga abre el archivo disponible."
+    "Las nuevas pestanas abren directamente la pagina de inicio sin mostrar about:blank.",
+    "El cierre difiere la destruccion del WebView hasta mostrar la pestana vecina.",
+    "Se agrega una prueba Playwright para detectar transiciones sin contenido."
   ]
 }

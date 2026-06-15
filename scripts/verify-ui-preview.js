@@ -31,8 +31,8 @@ function verifyInternalPageRoutes() {
   const buildInstaller = fs.readFileSync(path.join(root, "scripts", "Build-Installer.ps1"), "utf8");
   const requirements = [
     [browserForm.includes('Text = "Gan Browser"'), "Gan Browser window branding is missing"],
-    [versionInfo.includes('CurrentVersion = "2.5"'), "Gan Browser 2.5 version is missing"],
-    [versionInfo.includes('ReleaseName = "Gan Browser 2.5"'), "Gan Browser release name is missing"],
+    [versionInfo.includes('CurrentVersion = "2.6"'), "Gan Browser 2.6 version is missing"],
+    [versionInfo.includes('ReleaseName = "Gan Browser 2.6"'), "Gan Browser release name is missing"],
     [updateJson.sourceUrl === "https://github.com/wiimri/Gan-Browser", "update manifest repository is incorrect"],
     [updateJson.downloadUrl.endsWith("/GanBrowser-Setup-x64.exe"), "Gan permanent installer URL is incorrect"],
     [updateJson.sha256Url.endsWith("/GanBrowser-Setup-x64.sha256.txt"), "Gan installer SHA-256 URL is incorrect"],
@@ -64,6 +64,11 @@ function verifyInternalPageRoutes() {
     [browserForm.includes("e.Clicks >= 3"), "address bar triple-click selection is missing"],
     [browserForm.includes("_tabs.SelectedTab = page;") && browserForm.indexOf("_tabs.SelectedTab = page;") > browserForm.indexOf("await web.EnsureCoreWebView2Async(_environment);"), "new tabs are selected before WebView2 is ready"],
     [browserForm.includes("_tabs.SelectedTab = nextPage;"), "closing an active tab does not select its replacement first"],
+    [browserForm.includes("BeginInvoke((MethodInvoker)delegate { DisposeClosedTab(page, tab); })"), "closed tabs are disposed before the replacement can paint"],
+    [browserForm.includes("_newTab.Click += async delegate { await CreateTabAsync(HomeUrl); }"), "new tab button still exposes about:blank"],
+    [!browserForm.includes('CreateTabAsync("about:blank")'), "normal new-tab flow still opens an empty about:blank page"],
+    [browserForm.includes("PrepareNewTabSurfaceAsync"), "new WebViews are exposed before their first rendered surface"],
+    [browserForm.includes("await Task.WhenAny(ready.Task, Task.Delay(2000))"), "new-tab surface preparation has no bounded render wait"],
     [browserForm.includes("ControlStyles.OptimizedDoubleBuffer"), "browser shell double buffering is missing"],
     [internalPages.includes("gxlight:download:open:"), "downloads do not open on double-click"],
     [browserForm.includes("string.IsNullOrWhiteSpace(manifest.Sha256Url) || !VerifyInstallerHash"), "updates without SHA-256 are not rejected"],
@@ -164,6 +169,20 @@ async function main() {
       const githubCount = await page.locator('.tab[data-tab="GitHub"]').count();
       if (githubCount !== 1) {
         report.failures.push(`middle-click favorite did not create a tab: ${githubCount}`);
+      }
+
+      const transitionStates = [];
+      for (let i = 0; i < 5; i += 1) {
+        await page.evaluate((index) => makeTab(`Transition ${index}`), i);
+        transitionStates.push(await page.locator(".content").evaluate((node) => ({
+          width: node.getBoundingClientRect().width,
+          height: node.getBoundingClientRect().height,
+          state: node.dataset.transitionState
+        })));
+        await page.locator('.tab[data-tab^="Transition"]').last().locator(".close").click();
+      }
+      if (transitionStates.some((state) => state.width < 1 || state.height < 1 || state.state !== "content")) {
+        report.failures.push(`tab transition exposed empty content: ${JSON.stringify(transitionStates)}`);
       }
 
       await page.evaluate(() => {

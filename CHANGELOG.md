@@ -4,7 +4,7 @@ Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Li
 
 ## Version actual
 
-- Version publicada: `2.5`
+- Version publicada: `2.6`
 - Fecha: `2026-06-15`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
@@ -20,6 +20,19 @@ https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
 Ese archivo indica cual es la version publicada, el nombre de la release, los enlaces y las novedades que debe mostrar `gxlight://updated`.
 
 Si GitHub no responde, Gan Browser usa las notas locales compiladas como respaldo.
+
+## v2.6 - Eliminacion profunda de parpadeos
+
+Fecha: `2026-06-15`
+
+Cambios:
+
+- Se analizo cuadro por cuadro el video `2026-06-15 00-20-04.mp4`.
+- Las nuevas pestanas normales abren directamente `gxlight://home`; ya no muestran `about:blank`.
+- Al cerrar una pestana, su WebView se destruye en el siguiente ciclo de UI despues de mostrar la vecina.
+- La pestana vecina recibe foco y se lleva al frente antes de retirar la pestana cerrada.
+- Cada WebView nuevo precarga una superficie interna y espera su primer render antes de mostrarse.
+- Se agrego una prueba Playwright que repite aperturas y cierres y rechaza transiciones sin contenido.
 
 ## v2.5 - Transiciones fluidas y acciones rapidas
 
