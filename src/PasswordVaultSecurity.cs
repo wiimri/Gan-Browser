@@ -9,10 +9,23 @@ namespace GXLightBrowser
         public static bool MatchesExactHost(string entryUrl, string targetHost)
         {
             Uri entryUri;
-            return !string.IsNullOrWhiteSpace(targetHost) &&
-                Uri.TryCreate(entryUrl, UriKind.Absolute, out entryUri) &&
-                (entryUri.Scheme == Uri.UriSchemeHttp || entryUri.Scheme == Uri.UriSchemeHttps) &&
-                string.Equals(entryUri.Host, targetHost, StringComparison.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(targetHost) ||
+                !Uri.TryCreate(entryUrl, UriKind.Absolute, out entryUri) ||
+                (entryUri.Scheme != Uri.UriSchemeHttp && entryUri.Scheme != Uri.UriSchemeHttps) ||
+                string.IsNullOrWhiteSpace(entryUri.Host))
+            {
+                return false;
+            }
+
+            string entryHost = entryUri.Host.Trim().TrimEnd('.');
+            string cleanTarget = targetHost.Trim().TrimEnd('.');
+            string entryBase = entryHost.StartsWith("www.", StringComparison.OrdinalIgnoreCase)
+                ? entryHost.Substring(4)
+                : entryHost;
+            return string.Equals(entryHost, cleanTarget, StringComparison.OrdinalIgnoreCase) ||
+                cleanTarget.EndsWith("." + entryHost, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(entryBase, cleanTarget, StringComparison.OrdinalIgnoreCase) ||
+                cleanTarget.EndsWith("." + entryBase, StringComparison.OrdinalIgnoreCase);
         }
 
         public static string BuildFillScript(string usernameBase64, string passwordBase64)

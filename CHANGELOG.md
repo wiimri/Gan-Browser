@@ -4,7 +4,7 @@ Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Li
 
 ## Version actual
 
-- Version publicada: `2.11`
+- Version publicada: `2.12`
 - Fecha: `2026-06-18`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
@@ -20,6 +20,20 @@ https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
 Ese archivo indica cual es la version publicada, el nombre de la release, los enlaces y las novedades que debe mostrar `gxlight://updated`.
 
 Si GitHub no responde, Gan Browser usa las notas locales compiladas como respaldo.
+
+## v2.12 - Boveda unificada en privacidad
+
+Fecha: `2026-06-18`
+
+Cambios:
+
+- Se elimina la seccion duplicada de contrasenas del menu principal.
+- La boveda queda concentrada en `Configuracion > Privacidad y seguridad`.
+- Desde privacidad se puede importar CSV/TXT, exportar CSV, descargar plantilla, abrir entradas y solicitar rellenado del sitio actual.
+- La importacion acepta archivos CSV y TXT/TSV con delimitadores por coma, punto y coma o tabulador.
+- El autocompletado reconoce subdominios seguros de una credencial importada, por ejemplo `desafiolatam.com` o `www.desafiolatam.com` para `cursos.desafiolatam.com`.
+- Las contrasenas importadas siguen guardandose cifradas con Windows DPAPI y las acciones sensibles mantienen verificacion Windows Hello/PIN.
+- Se agregan pruebas para importacion TXT/TSV y coincidencia segura de subdominios.
 
 ## v2.11 - Importacion OperaGX/Chromium a boveda segura
 

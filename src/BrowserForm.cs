@@ -1081,6 +1081,31 @@ namespace GXLightBrowser
                 return;
             }
 
+            if (string.Equals(message, "gxlight:passwords:import", StringComparison.Ordinal))
+            {
+                ImportPasswords();
+                NavigateInternal("settings");
+                return;
+            }
+
+            if (string.Equals(message, "gxlight:passwords:export", StringComparison.Ordinal))
+            {
+                ExportPasswords();
+                return;
+            }
+
+            if (string.Equals(message, "gxlight:passwords:template", StringComparison.Ordinal))
+            {
+                ExportPasswordTemplate();
+                return;
+            }
+
+            if (string.Equals(message, "gxlight:passwords:fill", StringComparison.Ordinal))
+            {
+                Task ignored = FillCurrentSiteFromVaultAsync();
+                return;
+            }
+
             const string deletePrefix = "gxlight:bookmarks:delete:";
             if (message.StartsWith(deletePrefix, StringComparison.Ordinal))
             {
@@ -1809,19 +1834,6 @@ namespace GXLightBrowser
 
             menu.Items.Add(CreateMenuItem("Extensiones", "", async delegate { await NavigateExtensionsPageAsync(); }));
 
-            ToolStripMenuItem passwords = new ToolStripMenuItem("Contraseñas y autocompletado");
-            passwords.ForeColor = Theme.Text;
-            ToolStripMenuItem passwordAutosave = CreateMenuItem("Preguntar antes de guardar contraseñas", "", delegate { SetPasswordSavingEnabled(!_passwordSavingEnabled); });
-            passwordAutosave.Checked = _passwordSavingEnabled;
-            passwords.DropDownItems.Add(passwordAutosave);
-            passwords.DropDownItems.Add(new ToolStripSeparator());
-            passwords.DropDownItems.Add(CreateMenuItem("Ajustes de contraseñas", "", delegate { NavigateInternal("passwords"); }));
-            passwords.DropDownItems.Add(CreateMenuItem("Rellenar sitio actual desde la bóveda...", "Ctrl+Shift+L", async delegate { await FillCurrentSiteFromVaultAsync(); }));
-            passwords.DropDownItems.Add(CreateMenuItem("Importar contraseñas CSV...", "", delegate { ImportPasswords(); }));
-            passwords.DropDownItems.Add(CreateMenuItem("Exportar contraseñas CSV...", "", delegate { ExportPasswords(); }));
-            passwords.DropDownItems.Add(CreateMenuItem("Exportar plantilla CSV...", "", delegate { ExportPasswordTemplate(); }));
-            menu.Items.Add(passwords);
-
             menu.Items.Add(new ToolStripSeparator());
 
             menu.Items.Add(CreateMenuItem("Suspender pestañas inactivas ahora", "", delegate { SuspendIdleTabsNow(); }));
@@ -2132,7 +2144,7 @@ namespace GXLightBrowser
                 tab.WebView.CoreWebView2.Profile.IsPasswordAutosaveEnabled = enabled;
             }
 
-            NavigateInternal("passwords");
+            NavigateInternal("settings");
         }
 
         private void ShowGxControl()
@@ -2929,8 +2941,8 @@ namespace GXLightBrowser
         {
             using (OpenFileDialog dialog = new OpenFileDialog())
             {
-                dialog.Title = "Importar passwords CSV";
-                dialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+                dialog.Title = "Importar contraseñas CSV/TXT";
+                dialog.Filter = "CSV o TXT (*.csv;*.txt)|*.csv;*.txt|CSV files (*.csv)|*.csv|Text files (*.txt)|*.txt|All files (*.*)|*.*";
                 if (dialog.ShowDialog(this) != DialogResult.OK)
                 {
                     return;
@@ -4637,7 +4649,7 @@ namespace GXLightBrowser
                         "<p>Privacy Firewall: <b>" + (_privacyFirewallEnabled ? "enabled" : "disabled") + "</b></p>" +
                         "<p>Rules: " + _adBlocker.RuleCount + " ad rules, " + _privacyFirewall.RuleCount + " firewall rules.</p>");
                 case "settings":
-                    return InternalPages.SettingsHtml(_appSettings);
+                    return InternalPages.SettingsHtml(_appSettings, _passwordVault);
                 default:
                     return InternalPages.HtmlShell("Gan Browser", "<p>Section not found.</p>");
             }

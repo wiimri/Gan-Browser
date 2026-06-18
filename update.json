@@ -1,14 +1,14 @@
 {
-  "version": "2.11",
-  "releaseName": "Gan Browser 2.11",
+  "version": "2.12",
+  "releaseName": "Gan Browser 2.12",
   "publishedAt": "2026-06-18",
   "downloadUrl": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe",
   "sha256Url": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt",
   "sourceUrl": "https://github.com/wiimri/Gan-Browser",
   "changelogUrl": "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md",
   "highlights": [
-    "La importacion de contrasenas acepta CSV exportados desde OperaGX y navegadores Chromium.",
-    "El importador detecta encabezados, BOM, columnas variantes y campos multilinea.",
-    "Las credenciales importadas quedan cifradas con Windows DPAPI y listas para el rellenado."
+    "La boveda de contrasenas queda unificada dentro de Configuracion > Privacidad y seguridad.",
+    "La importacion acepta CSV y TXT/TSV de OperaGX, Chromium y exportaciones compatibles.",
+    "El autocompletado reconoce subdominios seguros como cursos.desafiolatam.com sin exponer contrasenas."
   ]
 }

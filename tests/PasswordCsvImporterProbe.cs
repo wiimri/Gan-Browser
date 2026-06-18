@@ -28,6 +28,16 @@ internal static class PasswordCsvImporterProbe
             return 1;
         }
 
+        string txt = "url\tusername\tpassword\nhttps://cursos.desafiolatam.com\talumno@correo.cl\tclave";
+        PasswordCsvImportResult txtResult = PasswordCsvImporter.Parse(txt);
+        if (txtResult.Entries.Count != 1 ||
+            txtResult.Entries[0].Username != "alumno@correo.cl" ||
+            txtResult.Entries[0].RevealPassword() != "clave")
+        {
+            Console.Error.WriteLine("TXT/TSV password import failed.");
+            return 1;
+        }
+
         Console.WriteLine("Password CSV importer probe passed.");
         return 0;
     }

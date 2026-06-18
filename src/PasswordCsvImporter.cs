@@ -20,7 +20,8 @@ namespace GXLightBrowser
         public static PasswordCsvImportResult Parse(string csv)
         {
             PasswordCsvImportResult result = new PasswordCsvImportResult();
-            List<string[]> rows = ParseRows(csv ?? string.Empty);
+            char delimiter = DetectDelimiter(csv ?? string.Empty);
+            List<string[]> rows = ParseRows(csv ?? string.Empty, delimiter);
             if (rows.Count == 0)
             {
                 return result;
@@ -143,7 +144,42 @@ namespace GXLightBrowser
                 : "Imported";
         }
 
-        private static List<string[]> ParseRows(string csv)
+        private static char DetectDelimiter(string csv)
+        {
+            int comma = CountDelimiter(csv, ',');
+            int semicolon = CountDelimiter(csv, ';');
+            int tab = CountDelimiter(csv, '\t');
+            if (tab > comma && tab >= semicolon) return '\t';
+            if (semicolon > comma) return ';';
+            return ',';
+        }
+
+        private static int CountDelimiter(string csv, char delimiter)
+        {
+            bool inQuotes = false;
+            int count = 0;
+            for (int i = 0; i < csv.Length; i++)
+            {
+                char ch = csv[i];
+                if (ch == '"')
+                {
+                    if (inQuotes && i + 1 < csv.Length && csv[i + 1] == '"')
+                    {
+                        i++;
+                    }
+                    else
+                    {
+                        inQuotes = !inQuotes;
+                    }
+                    continue;
+                }
+                if ((ch == '\r' || ch == '\n') && !inQuotes) break;
+                if (ch == delimiter && !inQuotes) count++;
+            }
+            return count;
+        }
+
+        private static List<string[]> ParseRows(string csv, char delimiter)
         {
             List<string[]> rows = new List<string[]>();
             List<string> row = new List<string>();
@@ -167,7 +203,7 @@ namespace GXLightBrowser
                     continue;
                 }
 
-                if (ch == ',' && !inQuotes)
+                if (ch == delimiter && !inQuotes)
                 {
                     row.Add(current.ToString());
                     current.Length = 0;

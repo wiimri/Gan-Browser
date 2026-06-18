@@ -10,8 +10,19 @@ internal static class PasswordVaultSecurityProbe
             Console.Error.WriteLine("Expected exact password vault host match.");
             return 1;
         }
+        if (!PasswordVaultSecurity.MatchesExactHost("https://desafiolatam.com/login", "cursos.desafiolatam.com"))
+        {
+            Console.Error.WriteLine("Password vault should match safe subdomains of an imported site.");
+            return 1;
+        }
+        if (!PasswordVaultSecurity.MatchesExactHost("https://www.desafiolatam.com/login", "cursos.desafiolatam.com"))
+        {
+            Console.Error.WriteLine("Password vault should match safe subdomains when the imported site uses www.");
+            return 1;
+        }
         if (PasswordVaultSecurity.MatchesExactHost("https://accounts.example.com/login", "evil.example.com") ||
-            PasswordVaultSecurity.MatchesExactHost("javascript:alert(1)", "accounts.example.com"))
+            PasswordVaultSecurity.MatchesExactHost("javascript:alert(1)", "accounts.example.com") ||
+            PasswordVaultSecurity.MatchesExactHost("https://evil-desafiolatam.com", "cursos.desafiolatam.com"))
         {
             Console.Error.WriteLine("Password vault accepted an unsafe host match.");
             return 1;

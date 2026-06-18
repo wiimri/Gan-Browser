@@ -473,7 +473,7 @@ namespace GXLightBrowser
             body.Append("<p>Gan Browser nunca guarda una credencial al escribirla. WebView2 muestra su aviso nativo despues de iniciar sesion y solo la conserva cuando eliges guardar.</p>");
             body.Append("<p>Las credenciales nativas quedan cifradas por Windows dentro del perfil persistente. La boveda tambien usa Windows DPAPI para el usuario actual.</p>");
             body.Append("<p>Para ver una contraseña o rellenar un sitio debes aprobar Windows Hello/PIN. Las contraseñas nunca se insertan en esta pagina interna.</p>");
-            body.Append("<p>Entradas importadas en la boveda: <b>").Append(passwordVault.Count).Append("</b>. Usa Menu &gt; Contraseñas y autocompletado para rellenar el sitio actual.</p>");
+            body.Append("<p>Entradas importadas en la boveda: <b>").Append(passwordVault.Count).Append("</b>. Usa Configuracion &gt; Privacidad y seguridad para importar, exportar y revisar la boveda.</p>");
 
             if (passwordVault.Count == 0)
             {
@@ -572,7 +572,7 @@ namespace GXLightBrowser
             return sb.ToString();
         }
 
-        public static string SettingsHtml(AppSettings settings)
+        public static string SettingsHtml(AppSettings settings, List<PasswordVaultEntry> passwordVault)
         {
             if (settings == null)
             {
@@ -858,6 +858,37 @@ namespace GXLightBrowser
             html.Append("  </label>");
             html.Append("</div>");
 
+            html.Append("<div class='setting-row'>");
+            html.Append("  <div class='setting-info'>");
+            html.Append("    <div class='setting-title'>Bóveda de contraseñas</div>");
+            html.Append("    <div class='setting-desc'>Entradas cifradas con Windows DPAPI: <b>").Append(passwordVault == null ? 0 : passwordVault.Count).Append("</b>. Importa CSV/TXT de OperaGX o Chromium y usa Windows Hello/PIN para revelar o rellenar contraseñas.</div>");
+            html.Append("    <div style='margin-top:10px;display:flex;gap:8px;flex-wrap:wrap'>");
+            html.Append("      <button class='btn btn-secondary' onclick='passwordAction(\"import\")'>Importar CSV/TXT</button>");
+            html.Append("      <button class='btn btn-secondary' onclick='passwordAction(\"export\")'>Exportar CSV</button>");
+            html.Append("      <button class='btn btn-secondary' onclick='passwordAction(\"template\")'>Plantilla</button>");
+            html.Append("      <button class='btn btn-secondary' onclick='passwordAction(\"fill\")'>Rellenar sitio actual</button>");
+            html.Append("    </div>");
+            html.Append("  </div>");
+            html.Append("</div>");
+
+            if (passwordVault != null && passwordVault.Count > 0)
+            {
+                html.Append("<table style='margin-top:12px'><tr><th>Name</th><th>URL</th><th>Username</th><th>Acciones</th></tr>");
+                int count = Math.Min(100, passwordVault.Count);
+                for (int i = 0; i < count; i++)
+                {
+                    PasswordVaultEntry entry = passwordVault[i];
+                    string encodedUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(entry.Url ?? string.Empty));
+                    html.Append("<tr><td>").Append(EscapeHtml(entry.Name)).Append("</td><td>")
+                        .Append(EscapeHtml(entry.Url)).Append("</td><td>")
+                        .Append(EscapeHtml(entry.Username)).Append("</td><td>")
+                        .Append("<button class='btn btn-secondary' onclick=\"chrome.webview.postMessage('gxlight:passwords:open:").Append(encodedUrl).Append("')\">Abrir</button> ")
+                        .Append("<button class='btn btn-secondary' onclick=\"chrome.webview.postMessage('gxlight:passwords:view:").Append(i).Append("')\">Ver</button>")
+                        .Append("</td></tr>");
+                }
+                html.Append("</table>");
+            }
+
             html.Append("</div></section>");
 
             // Section 4: Al Iniciar
@@ -964,6 +995,9 @@ namespace GXLightBrowser
             html.Append("}");
             html.Append("function changeDownloadsFolder() {");
             html.Append("  window.chrome.webview.postMessage('gxlight:settings:downloads:change');");
+            html.Append("}");
+            html.Append("function passwordAction(action) {");
+            html.Append("  window.chrome.webview.postMessage('gxlight:passwords:' + action);");
             html.Append("}");
             html.Append("function resetSettings() {");
             html.Append("  if (confirm('¿Estás seguro de que deseas restablecer todos los ajustes a los valores iniciales?')) {");

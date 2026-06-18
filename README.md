@@ -1,6 +1,6 @@
 # Gan Browser
 
-Version actual: `2.11`
+Version actual: `2.12`
 
 Gan Browser es un navegador liviano y enfocado en privacidad para Windows. Usa WebView2 para aprovechar el runtime del sistema y reducir el consumo frente a alternativas basadas en Electron.
 
@@ -33,7 +33,7 @@ Usa Microsoft Edge WebView2 en vez de Electron. Eso permite que la aplicacion se
 - Modo de baja memoria para pestanas inactivas.
 - Busqueda rapida de reglas de dominio en el bloqueador nativo.
 - Privacy Firewall integrado para trackers conocidos, endpoints tipo telemetria y parametros de seguimiento.
-- Menu principal con accesos a pestanas, historial, descargas, extensiones, passwords, memoria, Gan Guard, settings y herramientas de desarrollador.
+- Menu principal con accesos a pestanas, historial, descargas, extensiones, memoria, Gan Guard, settings y herramientas de desarrollador.
 - Pagina de historial de sesion.
 - Pagina de descargas de sesion.
 - Pregunta nativa antes de guardar passwords y autofill de WebView2 habilitado.
@@ -50,7 +50,7 @@ Usa Microsoft Edge WebView2 en vez de Electron. Eso permite que la aplicacion se
 - Barra de favoritos con apertura en nueva pestana mediante click del scroll y opcion para mostrarla u ocultarla.
 - Importacion/exportacion de bookmarks en HTML compatible con navegadores.
 - Gestor de bookmarks con carpetas, busqueda, seleccion multiple y eliminacion masiva.
-- Importacion/exportacion de passwords CSV mediante una boveda local protegida con Windows DPAPI.
+- Importacion/exportacion de passwords CSV/TXT desde Configuracion > Privacidad y seguridad mediante una boveda local protegida con Windows DPAPI.
 - Guardado nativo de passwords solo despues de aceptar el aviso de WebView2; Windows protege las credenciales del perfil.
 - Restauracion de sesion optimizada: una pestana activa y las demas suspendidas para reducir RAM.
 - Favicons por pagina, pestanas compactas cuadradas y tamanos pequeno, mediano, grande o automatico.
@@ -63,7 +63,7 @@ Usa Microsoft Edge WebView2 en vez de Electron. Eso permite que la aplicacion se
 
 Gan Browser usa versiones simples pensadas para el proyecto personal:
 
-- linea estable actual: `2.11`
+- linea estable actual: `2.12`
 - cada mejora o correccion del navegador sube la version menor: `2.1`, `2.2`, `2.3` ...
 
 Cuando una nueva version se ejecuta por primera vez, el navegador abre `gxlight://updated` con un resumen corto. La app guarda la ultima version vista en `%LOCALAPPDATA%\GXLightBrowser\settings.ini`, por lo que esa pestana aparece solo una vez por version.
@@ -97,7 +97,7 @@ Los cambios solo de documentacion pueden ir en GitHub sin subir la version de la
 Ejecutar desde PowerShell:
 
 ```powershell
-cd C:\Users\arias\Documents\DEV\GXLightBrowser
+cd C:\CODEX\GXLightBrowser
 .\scripts\Build.ps1
 .\scripts\Run.ps1
 ```
@@ -133,7 +133,7 @@ compatibilidad y reparacion en Atlas OS.
 Para publicar el instalador como asset de GitHub Release usando la credencial segura de Git:
 
 ```powershell
-.\scripts\Publish-Release.ps1 -Version 2.11
+.\scripts\Publish-Release.ps1 -Version 2.12
 ```
 
 El script valida que navegador, instalador, manifiesto, paquetes y bitacora usen la misma version. Tambien
@@ -143,7 +143,7 @@ permanente `GanBrowser-Setup-x64.sha256.txt`.
 Antes de publicar se puede ejecutar solamente la comprobacion:
 
 ```powershell
-.\scripts\Verify-Release.ps1 -Version 2.11 -RequireAssets
+.\scripts\Verify-Release.ps1 -Version 2.12 -RequireAssets
 ```
 
 El instalador y su comprobacion SHA-256 permanentes pueden descargarse desde:
@@ -155,7 +155,7 @@ https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-
 
 ## Compatibilidad del cambio de nombre
 
-Gan Browser `2.11` conserva temporalmente varios identificadores internos de GX Light Browser para que la actualizacion no pierda datos:
+Gan Browser `2.12` conserva temporalmente varios identificadores internos de GX Light Browser para que la actualizacion no pierda datos:
 
 - perfil y configuracion en `%LOCALAPPDATA%\GXLightBrowser`
 - ejecutable interno `GXLightBrowser.exe`
