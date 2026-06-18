@@ -4,8 +4,8 @@ Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Li
 
 ## Version actual
 
-- Version publicada: `2.10`
-- Fecha: `2026-06-15`
+- Version publicada: `2.11`
+- Fecha: `2026-06-18`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
 
@@ -20,6 +20,19 @@ https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
 Ese archivo indica cual es la version publicada, el nombre de la release, los enlaces y las novedades que debe mostrar `gxlight://updated`.
 
 Si GitHub no responde, Gan Browser usa las notas locales compiladas como respaldo.
+
+## v2.11 - Importacion OperaGX/Chromium a boveda segura
+
+Fecha: `2026-06-18`
+
+Cambios:
+
+- El importador de contrasenas acepta CSV exportados desde OperaGX y navegadores Chromium.
+- Se detectan encabezados con BOM y columnas variantes como `origin_url`, `username_value` y `password_value`.
+- Se soportan campos entre comillas, comas dentro de contrasenas y valores multilinea.
+- Las filas incompletas se omiten con conteo visible y los duplicados no se vuelven a guardar.
+- Las credenciales importadas quedan cifradas con Windows DPAPI y disponibles para el asistente de rellenado.
+- Se agrego una prueba dedicada para CSV de Opera/Chromium.
 
 ## v2.10 - Asistente contextual de credenciales
 

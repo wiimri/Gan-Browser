@@ -2938,35 +2938,27 @@ namespace GXLightBrowser
 
                 try
                 {
-                    string[] lines = File.ReadAllLines(dialog.FileName, Encoding.UTF8);
+                    string csv = File.ReadAllText(dialog.FileName, Encoding.UTF8);
+                    PasswordCsvImportResult import = PasswordCsvImporter.Parse(csv);
                     int added = 0;
-                    for (int i = 0; i < lines.Length; i++)
+                    int duplicates = 0;
+                    for (int i = 0; i < import.Entries.Count; i++)
                     {
-                        if (string.IsNullOrWhiteSpace(lines[i]))
+                        PasswordVaultEntry entry = import.Entries[i];
+                        if (PasswordVaultContains(entry))
                         {
+                            duplicates++;
                             continue;
                         }
-
-                        string[] parts = SplitCsvLine(lines[i]);
-                        if (parts.Length < 4 || IsPasswordHeader(parts))
-                        {
-                            continue;
-                        }
-
-                        PasswordVaultEntry entry = new PasswordVaultEntry();
-                        entry.Name = parts[0];
-                        entry.Url = parts[1];
-                        entry.Username = parts[2];
-                        entry.SetPassword(parts[3]);
-                        entry.Note = parts.Length > 4 ? parts[4] : string.Empty;
-                        entry.ImportedUtc = DateTime.UtcNow;
                         _passwordVault.Add(entry);
                         added++;
                     }
 
                     SavePasswordVault();
-                    MessageBox.Show(this, "Contraseñas importadas a la bóveda local: " + added + Environment.NewLine +
-                        "Usa el menú Contraseñas y autocompletado para rellenar un sitio después de aprobar Windows Hello/PIN.", "Contraseñas");
+                    MessageBox.Show(this, "Contraseñas importadas a la boveda local: " + added + Environment.NewLine +
+                        "Duplicadas omitidas: " + duplicates + Environment.NewLine +
+                        "Filas omitidas por datos incompletos: " + import.SkippedRows + Environment.NewLine +
+                        "Quedan cifradas con Windows DPAPI para este usuario y listas para el rellenado automatico.", "Contraseñas");
                 }
                 catch (Exception ex)
                 {
@@ -3048,6 +3040,21 @@ namespace GXLightBrowser
             {
                 dialog.ShowDialog(this);
             }
+        }
+
+        private bool PasswordVaultContains(PasswordVaultEntry candidate)
+        {
+            for (int i = 0; i < _passwordVault.Count; i++)
+            {
+                PasswordVaultEntry existing = _passwordVault[i];
+                if (string.Equals(existing.Url, candidate.Url, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(existing.Username, candidate.Username, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(existing.RevealPassword(), candidate.RevealPassword(), StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private async Task FillCurrentSiteFromVaultAsync()

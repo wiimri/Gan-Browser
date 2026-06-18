@@ -5,6 +5,7 @@ $Out = Join-Path $Bin "PrivacyFirewallProbe.exe"
 $AdBlockerOut = Join-Path $Bin "AdBlockerProbe.exe"
 $LayoutOut = Join-Path $Bin "LayoutProbe.exe"
 $PasswordVaultOut = Join-Path $Bin "PasswordVaultSecurityProbe.exe"
+$PasswordCsvOut = Join-Path $Bin "PasswordCsvImporterProbe.exe"
 $Csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 
 if (!(Test-Path $Csc)) {
@@ -77,4 +78,21 @@ if ($LASTEXITCODE -ne 0) {
 & $PasswordVaultOut
 if ($LASTEXITCODE -ne 0) {
     throw "Password vault security probe failed with exit code $LASTEXITCODE."
+}
+
+& $Csc /nologo /target:exe /platform:x64 `
+    /out:$PasswordCsvOut `
+    /reference:System.dll `
+    /reference:System.Security.dll `
+    (Join-Path $Root "src\PasswordVaultEntry.cs") `
+    (Join-Path $Root "src\PasswordCsvImporter.cs") `
+    (Join-Path $Root "tests\PasswordCsvImporterProbe.cs")
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Password CSV importer probe compilation failed with exit code $LASTEXITCODE."
+}
+
+& $PasswordCsvOut
+if ($LASTEXITCODE -ne 0) {
+    throw "Password CSV importer probe failed with exit code $LASTEXITCODE."
 }

@@ -31,8 +31,8 @@ function verifyInternalPageRoutes() {
   const buildInstaller = fs.readFileSync(path.join(root, "scripts", "Build-Installer.ps1"), "utf8");
   const requirements = [
     [browserForm.includes('Text = "Gan Browser"'), "Gan Browser window branding is missing"],
-    [versionInfo.includes('CurrentVersion = "2.10"'), "Gan Browser 2.10 version is missing"],
-    [versionInfo.includes('ReleaseName = "Gan Browser 2.10"'), "Gan Browser release name is missing"],
+    [versionInfo.includes('CurrentVersion = "2.11"'), "Gan Browser 2.11 version is missing"],
+    [versionInfo.includes('ReleaseName = "Gan Browser 2.11"'), "Gan Browser release name is missing"],
     [updateJson.sourceUrl === "https://github.com/wiimri/Gan-Browser", "update manifest repository is incorrect"],
     [updateJson.downloadUrl.endsWith("/GanBrowser-Setup-x64.exe"), "Gan permanent installer URL is incorrect"],
     [updateJson.sha256Url.endsWith("/GanBrowser-Setup-x64.sha256.txt"), "Gan installer SHA-256 URL is incorrect"],
@@ -86,6 +86,7 @@ function verifyInternalPageRoutes() {
     [browserForm.includes("FillVaultCredentialFromPageAsync"), "password selection does not request native verification"],
     [browserForm.includes("web != ActiveWebView() || !IsActiveWindow()"), "background pages can request password vault unlock"],
     [browserForm.includes('VerifyVaultAccessAsync("Exportar todas las contraseñas'), "password vault export is not protected by Windows Hello"],
+    [browserForm.includes("PasswordCsvImporter.Parse"), "Opera/Chromium password CSV importer is not used"],
     [browserForm.includes("string.IsNullOrWhiteSpace(manifest.Sha256Url) || !VerifyInstallerHash"), "updates without SHA-256 are not rejected"],
     [browserForm.includes("/RELAUNCH"), "update relaunch argument is missing"],
     [internalPages.includes("gxlight:update:prepare"), "update preparation action is missing"],
