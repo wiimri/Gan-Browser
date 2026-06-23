@@ -1,15 +1,15 @@
 {
-  "version": "2.13",
-  "releaseName": "Gan Browser 2.13",
+  "version": "2.14",
+  "releaseName": "Gan Browser 2.14",
   "publishedAt": "2026-06-23",
   "downloadUrl": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe",
   "sha256Url": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt",
-  "sha256": "DD640F81400F6F4ABA4F0E0927C2AD7F8228A0BA14E50834EA60A2E112908BFB",
+  "sha256": "7F9A29DD897ACC7E06DAA43D331D04C2E93384463FA75298769D524B2359ADB2",
   "sourceUrl": "https://github.com/wiimri/Gan-Browser",
   "changelogUrl": "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md",
   "highlights": [
-    "El actualizador descarga versiones nuevas silenciosamente en segundo plano.",
-    "El menu muestra progreso, permite cancelar y ofrece reiniciar cuando el instalador queda verificado.",
-    "El manifiesto incluye SHA-256 inline con prioridad sobre el hash externo."
+    "Reducción de parpadeo (flickering) en la interfaz principal.",
+    "Optimización del dibujado del fondo en las pestañas sin bordes.",
+    "Estilo de dibujado personalizado mejorado con soporte para doble búfer de control."
   ]
 }

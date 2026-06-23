@@ -31,8 +31,8 @@ function verifyInternalPageRoutes() {
   const buildInstaller = fs.readFileSync(path.join(root, "scripts", "Build-Installer.ps1"), "utf8");
   const requirements = [
     [browserForm.includes('Text = "Gan Browser"'), "Gan Browser window branding is missing"],
-    [versionInfo.includes('CurrentVersion = "2.13"'), "Gan Browser 2.13 version is missing"],
-    [versionInfo.includes('ReleaseName = "Gan Browser 2.13"'), "Gan Browser release name is missing"],
+    [versionInfo.includes('CurrentVersion = "2.14"'), "Gan Browser 2.14 version is missing"],
+    [versionInfo.includes('ReleaseName = "Gan Browser 2.14"'), "Gan Browser release name is missing"],
     [updateJson.sourceUrl === "https://github.com/wiimri/Gan-Browser", "update manifest repository is incorrect"],
     [updateJson.downloadUrl.endsWith("/GanBrowser-Setup-x64.exe"), "Gan permanent installer URL is incorrect"],
     [updateJson.sha256Url.endsWith("/GanBrowser-Setup-x64.sha256.txt"), "Gan installer SHA-256 URL is incorrect"],

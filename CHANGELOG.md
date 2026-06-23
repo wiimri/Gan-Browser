@@ -4,7 +4,7 @@ Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Li
 
 ## Version actual
 
-- Version publicada: `2.13`
+- Version publicada: `2.14`
 - Fecha: `2026-06-23`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
@@ -20,6 +20,16 @@ https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
 Ese archivo indica cual es la version publicada, el nombre de la release, los enlaces y las novedades que debe mostrar `gxlight://updated`.
 
 Si GitHub no responde, Gan Browser usa las notas locales compiladas como respaldo.
+
+## v2.14 - Reducción de parpadeo y dibujado doble búfer
+
+Fecha: `2026-06-23`
+
+Cambios:
+
+- Reducción de parpadeo (flickering) en la interfaz principal.
+- Optimización del dibujado del fondo en las pestañas sin bordes.
+- Estilo de dibujado personalizado mejorado con soporte para doble búfer de control.
 
 ## v2.13 - Actualizador silencioso con SHA-256 inline
 

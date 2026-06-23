@@ -1,11 +1,12 @@
-﻿# Gan Browser Audit
+# Gan Browser Audit
 
 Fecha: 2026-06-23
 
-Version actual: 2.13
+Version actual: 2.14
 
 ## Revision de mantenimiento 2026-06-15
 
+- Version `2.14`: reducción de parpadeo (flickering) y dibujado de doble búfer en BorderlessTabControl y BrowserForm.
 - Version `2.13`: actualizador silencioso con progreso, cancelacion, rollback e integridad SHA-256 inline en `update.json`.
 - Version `2.12`: boveda unificada en Configuracion > Privacidad y seguridad, importacion CSV/TXT y autocompletado seguro por subdominio.
 - Version `2.11`: importacion tolerante de CSV OperaGX/Chromium con almacenamiento DPAPI.

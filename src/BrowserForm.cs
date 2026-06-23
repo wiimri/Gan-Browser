@@ -88,7 +88,12 @@ namespace GXLightBrowser
 
         public BrowserForm()
         {
-            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
+            SetStyle(
+                ControlStyles.OptimizedDoubleBuffer |
+                ControlStyles.AllPaintingInWmPaint |
+                ControlStyles.Opaque |
+                ControlStyles.UserPaint |
+                ControlStyles.ResizeRedraw, true);
             UpdateStyles();
             Text = "Gan Browser";
             MinimumSize = new Size(760, 540);
@@ -460,6 +465,22 @@ namespace GXLightBrowser
             if (GetKeyState(0x10) < 0) modifiers |= Keys.Shift;
             if (GetKeyState(0x12) < 0) modifiers |= Keys.Alt;
             return modifiers;
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_ERASEBKGND = 0x0014;
+            if (m.Msg == WM_ERASEBKGND)
+            {
+                using (Graphics g = Graphics.FromHdc(m.WParam))
+                using (Brush b = new SolidBrush(Theme.Window))
+                {
+                    g.FillRectangle(b, ClientRectangle);
+                }
+                m.Result = (System.IntPtr)1;
+                return;
+            }
+            base.WndProc(ref m);
         }
 
         public bool PreFilterMessage(ref Message message)
