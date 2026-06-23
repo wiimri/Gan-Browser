@@ -36,6 +36,7 @@ $WindowsSecurity = Join-Path $env:WINDIR "System32\WinMetadata\Windows.Security.
 $WindowsFoundation = Join-Path $env:WINDIR "System32\WinMetadata\Windows.Foundation.winmd"
 $WindowsRuntime = Join-Path $env:WINDIR "Microsoft.NET\assembly\GAC_MSIL\System.Runtime.WindowsRuntime\v4.0_4.0.0.0__b77a5c561934e089\System.Runtime.WindowsRuntime.dll"
 $SystemRuntime = Join-Path $env:WINDIR "Microsoft.NET\assembly\GAC_MSIL\System.Runtime\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Runtime.dll"
+$SystemNetHttp = Join-Path $env:WINDIR "Microsoft.NET\assembly\GAC_MSIL\System.Net.Http\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Net.Http.dll"
 
 if (!(Test-Path $Core) -or !(Test-Path $WinForms) -or !(Test-Path $Loader)) {
     throw "The WebView2 package layout was not recognized. Check version $WebView2Version."
@@ -59,6 +60,7 @@ if (!(Test-Path $Icon)) {
     /reference:System.dll `
     /reference:System.Core.dll `
     /reference:System.Drawing.dll `
+    /reference:System.Net.Http.dll `
     /reference:System.Runtime.Serialization.dll `
     /reference:System.Security.dll `
     /reference:System.Windows.Forms.dll `

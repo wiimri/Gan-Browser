@@ -31,8 +31,8 @@ function verifyInternalPageRoutes() {
   const buildInstaller = fs.readFileSync(path.join(root, "scripts", "Build-Installer.ps1"), "utf8");
   const requirements = [
     [browserForm.includes('Text = "Gan Browser"'), "Gan Browser window branding is missing"],
-    [versionInfo.includes('CurrentVersion = "2.12"'), "Gan Browser 2.12 version is missing"],
-    [versionInfo.includes('ReleaseName = "Gan Browser 2.12"'), "Gan Browser release name is missing"],
+    [versionInfo.includes('CurrentVersion = "2.13"'), "Gan Browser 2.13 version is missing"],
+    [versionInfo.includes('ReleaseName = "Gan Browser 2.13"'), "Gan Browser release name is missing"],
     [updateJson.sourceUrl === "https://github.com/wiimri/Gan-Browser", "update manifest repository is incorrect"],
     [updateJson.downloadUrl.endsWith("/GanBrowser-Setup-x64.exe"), "Gan permanent installer URL is incorrect"],
     [updateJson.sha256Url.endsWith("/GanBrowser-Setup-x64.sha256.txt"), "Gan installer SHA-256 URL is incorrect"],
@@ -52,7 +52,7 @@ function verifyInternalPageRoutes() {
     [browserForm.includes("PreFilterMessage"), "native keyboard message routing is missing"],
     [browserForm.includes("IsBrowserShortcut"), "browser shortcut routing is missing"],
     [browserForm.includes("PrepareUpdateAsync"), "background update preparation is missing"],
-    [browserForm.includes("DownloadUpdateFileWithRetriesAsync"), "update downloads do not retry transient GitHub failures"],
+    [browserForm.includes("DownloadUpdateFileWithProgressAsync") && browserForm.includes("const int maxAttempts = 3"), "update downloads do not retry transient GitHub failures"],
     [browserForm.includes("new FileInfo(destinationPath).Length == 0"), "empty partial update downloads are not rejected"],
     [browserForm.includes("File.Delete(destinationPath)"), "partial update downloads are not cleaned up"],
     [browserForm.includes('"Mostrar barra de marcadores"'), "bookmarks bar visibility menu action is missing"],
@@ -90,7 +90,7 @@ function verifyInternalPageRoutes() {
     [browserForm.includes("web != ActiveWebView() || !IsActiveWindow()"), "background pages can request password vault unlock"],
     [browserForm.includes('VerifyVaultAccessAsync("Exportar todas las contraseñas'), "password vault export is not protected by Windows Hello"],
     [browserForm.includes("PasswordCsvImporter.Parse"), "Opera/Chromium password CSV importer is not used"],
-    [browserForm.includes("string.IsNullOrWhiteSpace(manifest.Sha256Url) || !VerifyInstallerHash"), "updates without SHA-256 are not rejected"],
+    [browserForm.includes("VerifyInstallerHashAsync") && browserForm.includes("manifest.Sha256"), "updates without SHA-256 are not rejected"],
     [browserForm.includes("/RELAUNCH"), "update relaunch argument is missing"],
     [internalPages.includes("gxlight:update:prepare"), "update preparation action is missing"],
     [installer.includes("RestartApplications=yes"), "installer application restart support is missing"],

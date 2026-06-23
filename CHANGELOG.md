@@ -4,8 +4,8 @@ Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Li
 
 ## Version actual
 
-- Version publicada: `2.12`
-- Fecha: `2026-06-18`
+- Version publicada: `2.13`
+- Fecha: `2026-06-23`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
 
@@ -20,6 +20,20 @@ https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
 Ese archivo indica cual es la version publicada, el nombre de la release, los enlaces y las novedades que debe mostrar `gxlight://updated`.
 
 Si GitHub no responde, Gan Browser usa las notas locales compiladas como respaldo.
+
+## v2.13 - Actualizador silencioso con SHA-256 inline
+
+Fecha: `2026-06-23`
+
+Cambios:
+
+- Al iniciar, el navegador detecta versiones nuevas y prepara la descarga silenciosa en segundo plano.
+- Durante la descarga, el estado muestra progreso y el menu cambia para permitir cancelar.
+- Al terminar, el menu ofrece `Reiniciar para aplicar v2.13` y conserva la sesion antes de ejecutar el instalador.
+- `update.json` incorpora `sha256` inline, con prioridad sobre el archivo `.sha256.txt` externo.
+- `Build-Installer.ps1` y `Publish-Release.ps1` inyectan el hash SHA-256 del instalador versionado.
+- Se crea backup local de rollback antes de reemplazar archivos de instalacion.
+- Se mantiene compatibilidad con la carpeta historica `GXLightBrowser` y la nueva carpeta visible `GanBrowser`.
 
 ## v2.12 - Boveda unificada en privacidad
 

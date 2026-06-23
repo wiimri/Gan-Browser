@@ -1,5 +1,5 @@
 #define MyAppName "Gan Browser"
-#define MyAppVersion "2.12"
+#define MyAppVersion "2.13"
 #define MyAppPublisher "wiimri"
 #define MyAppURL "https://github.com/wiimri/Gan-Browser"
 #define MyAppExeName "GXLightBrowser.exe"
@@ -11,7 +11,7 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
-DefaultDirName={autopf}\GXLightBrowser
+DefaultDirName={autopf}\GanBrowser
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=admin
@@ -101,8 +101,27 @@ begin
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  RollbackDir: String;
 begin
   Result := '';
+
+  { Crear backup de rollback antes de reemplazar archivos }
+  RollbackDir := ExpandConstant('{localappdata}\GXLightBrowser\rollback-{#MyAppVersion}');
+  if DirExists(ExpandConstant('{app}')) then
+  begin
+    ForceDirectories(RollbackDir);
+    if CopyFile(ExpandConstant('{app}\GXLightBrowser.exe'), RollbackDir + '\GXLightBrowser.exe', False) then
+      Log('Rollback backup: GXLightBrowser.exe');
+    if CopyFile(ExpandConstant('{app}\Microsoft.Web.WebView2.Core.dll'), RollbackDir + '\Microsoft.Web.WebView2.Core.dll', False) then
+      Log('Rollback backup: WebView2.Core.dll');
+    if CopyFile(ExpandConstant('{app}\Microsoft.Web.WebView2.WinForms.dll'), RollbackDir + '\Microsoft.Web.WebView2.WinForms.dll', False) then
+      Log('Rollback backup: WebView2.WinForms.dll');
+    if CopyFile(ExpandConstant('{app}\WebView2Loader.dll'), RollbackDir + '\WebView2Loader.dll', False) then
+      Log('Rollback backup: WebView2Loader.dll');
+    Log('Rollback backup created at ' + RollbackDir);
+  end;
+
   if not IsDotNet48Installed then
     Log('.NET Framework 4.8 no esta instalado; se instalara como requisito.');
   if not IsWebView2Installed then

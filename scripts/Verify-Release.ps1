@@ -53,6 +53,13 @@ if ($RequireAssets) {
             throw "Required release asset not found: dist\$assetName"
         }
     }
+
+    $versionedInstaller = Join-Path $Root "dist\GanBrowser-Setup-$Version-x64.exe"
+    $versionedHash = (Get-FileHash $versionedInstaller -Algorithm SHA256).Hash
+    if ([string]::IsNullOrWhiteSpace([string]$manifest.sha256) -or
+        ![string]::Equals([string]$manifest.sha256, $versionedHash, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "update.json inline sha256 does not match dist\GanBrowser-Setup-$Version-x64.exe."
+    }
 }
 
 Write-Host "Release metadata verified for Gan Browser $Version."

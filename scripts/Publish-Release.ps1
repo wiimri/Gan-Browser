@@ -25,6 +25,19 @@ if ($Assets.Count -eq 0) {
 
 & (Join-Path $PSScriptRoot "Verify-Release.ps1") -Version $Version -RequireAssets
 
+# Inyectar SHA-256 inline en update.json
+$VersionedInstaller = Join-Path $Root "dist\GanBrowser-Setup-$Version-x64.exe"
+if (Test-Path $VersionedInstaller) {
+    $Hash = (Get-FileHash $VersionedInstaller -Algorithm SHA256).Hash
+    $UpdateJsonPath = Join-Path $Root "update.json"
+    if (Test-Path $UpdateJsonPath) {
+        $UpdateJson = Get-Content $UpdateJsonPath -Raw -Encoding UTF8
+        $UpdateJson = $UpdateJson -replace '"sha256":\s*"[^"]*"', ('"sha256": "' + $Hash + '"')
+        [System.IO.File]::WriteAllText($UpdateJsonPath, ($UpdateJson.TrimEnd() + [Environment]::NewLine), [System.Text.UTF8Encoding]::new($false))
+        Write-Host "Injected SHA-256 $Hash into update.json"
+    }
+}
+
 if ([string]::IsNullOrWhiteSpace($Title)) {
     $Title = "Gan Browser $Version"
 }

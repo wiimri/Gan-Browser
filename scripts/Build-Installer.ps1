@@ -61,6 +61,15 @@ if ($null -ne $VersionedInstaller) {
         -Value ($LatestHash + "  GanBrowser-Setup-x64.exe") -Encoding ASCII
     Set-Content -Path (Join-Path $Dist "GXLightBrowser-Setup-x64.sha256.txt") `
         -Value ($LegacyLatestHash + "  GXLightBrowser-Setup-x64.exe") -Encoding ASCII
+
+    # Inyectar SHA-256 inline en update.json
+    $UpdateJsonPath = Join-Path $Root "update.json"
+    if (Test-Path $UpdateJsonPath) {
+        $UpdateJson = Get-Content $UpdateJsonPath -Raw -Encoding UTF8
+        $UpdateJson = $UpdateJson -replace '"sha256":\s*"[^"]*"', ('"sha256": "' + $VersionedHash + '"')
+        [System.IO.File]::WriteAllText($UpdateJsonPath, ($UpdateJson.TrimEnd() + [Environment]::NewLine), [System.Text.UTF8Encoding]::new($false))
+        Write-Host "Injected SHA-256 $VersionedHash into update.json"
+    }
 }
 
 Write-Host "Installer created in $Dist"

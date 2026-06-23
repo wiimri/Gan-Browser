@@ -1,8 +1,10 @@
 using System;
 using System.IO;
-using System.Net;
+using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GXLightBrowser
@@ -12,6 +14,14 @@ namespace GXLightBrowser
     {
         public const string ManifestUrl = "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json";
         public const string DefaultChangelogUrl = "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md";
+
+        private static readonly HttpClient _http = new HttpClient();
+
+        static UpdateManifest()
+        {
+            _http.Timeout = TimeSpan.FromSeconds(5);
+            _http.DefaultRequestHeaders.UserAgent.TryParseAdd("GanBrowser/" + VersionInfo.CurrentVersion);
+        }
 
         [DataMember(Name = "version")]
         public string Version { get; set; }
@@ -27,6 +37,9 @@ namespace GXLightBrowser
 
         [DataMember(Name = "sha256Url")]
         public string Sha256Url { get; set; }
+
+        [DataMember(Name = "sha256")]
+        public string Sha256 { get; set; }
 
         [DataMember(Name = "sourceUrl")]
         public string SourceUrl { get; set; }
@@ -48,6 +61,7 @@ namespace GXLightBrowser
                 PublishedAt = "2026-06-11",
                 DownloadUrl = "https://github.com/wiimri/Gan-Browser/releases",
                 Sha256Url = string.Empty,
+                Sha256 = string.Empty,
                 SourceUrl = BrandInfo.RepositoryUrl,
                 ChangelogUrl = DefaultChangelogUrl,
                 ChangelogMarkdown = string.Empty,
@@ -55,18 +69,27 @@ namespace GXLightBrowser
             };
         }
 
-        public static async Task<UpdateManifest> LoadLatestAsync()
+        public static async Task<UpdateManifest> LoadLatestAsync(CancellationToken ct = default(CancellationToken))
         {
             try
             {
-                UpdateManifest manifest = await Task.Run(delegate { return DownloadLatest(); });
-                if (!IsUsable(manifest))
+                using (HttpResponseMessage response = await _http.GetAsync(ManifestUrl, ct).ConfigureAwait(false))
                 {
-                    return LocalFallback();
-                }
+                    response.EnsureSuccessStatusCode();
+                    using (Stream stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                    {
+                        DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(UpdateManifest));
+                        UpdateManifest manifest = serializer.ReadObject(stream) as UpdateManifest;
+                        if (!IsUsable(manifest))
+                        {
+                            return LocalFallback();
+                        }
 
-                manifest.ChangelogMarkdown = await Task.Run(delegate { return DownloadChangelog(manifest.ChangelogUrl); });
-                return manifest;
+                        manifest.ChangelogMarkdown = await DownloadChangelogAsync(manifest.ChangelogUrl, ct)
+                            .ConfigureAwait(false);
+                        return manifest;
+                    }
+                }
             }
             catch
             {
@@ -74,35 +97,15 @@ namespace GXLightBrowser
             }
         }
 
-        private static UpdateManifest DownloadLatest()
-        {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ManifestUrl);
-            request.UserAgent = "GanBrowser/" + VersionInfo.CurrentVersion;
-            request.Timeout = 3500;
-            request.ReadWriteTimeout = 3500;
-
-            using (WebResponse response = request.GetResponse())
-            using (Stream stream = response.GetResponseStream())
-            {
-                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(UpdateManifest));
-                return serializer.ReadObject(stream) as UpdateManifest;
-            }
-        }
-
-        private static string DownloadChangelog(string changelogUrl)
+        private static async Task<string> DownloadChangelogAsync(string changelogUrl, CancellationToken ct)
         {
             try
             {
                 string url = string.IsNullOrWhiteSpace(changelogUrl) ? DefaultChangelogUrl : changelogUrl;
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.UserAgent = "GanBrowser/" + VersionInfo.CurrentVersion;
-                request.Timeout = 3500;
-                request.ReadWriteTimeout = 3500;
-                using (WebResponse response = request.GetResponse())
-                using (Stream stream = response.GetResponseStream())
-                using (StreamReader reader = new StreamReader(stream))
+                using (HttpResponseMessage response = await _http.GetAsync(url, ct).ConfigureAwait(false))
                 {
-                    return reader.ReadToEnd();
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 }
             }
             catch

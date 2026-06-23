@@ -6,9 +6,11 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -41,7 +43,7 @@ namespace GXLightBrowser
         private readonly ChromeButton _menuButton = new ChromeButton();
         private readonly ChromeButton _memoryLimitButton = new ChromeButton();
         private readonly Label _memoryLabel = new Label();
-        private readonly Timer _memoryTimer = new Timer();
+        private readonly System.Windows.Forms.Timer _memoryTimer = new System.Windows.Forms.Timer();
         private readonly List<HistoryEntry> _history = new List<HistoryEntry>();
         private readonly List<DownloadEntry> _downloads = new List<DownloadEntry>();
         private readonly List<BookmarkEntry> _bookmarks = new List<BookmarkEntry>();
@@ -72,6 +74,17 @@ namespace GXLightBrowser
         private bool _previousTopMost;
         private string _preparedUpdateInstallerPath;
         private UpdateManifest _preparedUpdateManifest;
+        private CancellationTokenSource _updateCts;
+        private bool _updateDownloading;
+        private bool _updateAvailable;
+        private static readonly HttpClient _httpClient;
+
+        static BrowserForm()
+        {
+            _httpClient = new HttpClient();
+            _httpClient.Timeout = TimeSpan.FromMinutes(30);
+            _httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd("GanBrowser/" + VersionInfo.CurrentVersion);
+        }
 
         public BrowserForm()
         {
@@ -707,7 +720,11 @@ namespace GXLightBrowser
                 Version.TryParse(_updateManifest.Version, out remoteVersion) &&
                 remoteVersion > installedVersion)
             {
-                await CheckForUpdatesAsync(false);
+                // Auto-descarga silenciosa en segundo plano sin molestar al usuario
+                BeginInvoke((MethodInvoker)(async delegate
+                {
+                    await PrepareUpdateSilentAsync(_updateManifest);
+                }));
                 return;
             }
             if (string.Equals(_appSettings.LastSeenVersion, _updateManifest.Version, StringComparison.Ordinal))
@@ -1891,12 +1908,30 @@ namespace GXLightBrowser
 
             menu.Items.Add(CreateMenuItem("Buscar...", "Ctrl+F", delegate { ExecuteFind(); }));
             menu.Items.Add(CreateMenuItem("Configuración", "Alt+P", delegate { NavigateInternal("settings"); }));
-            menu.Items.Add(CreateMenuItem("Buscar actualizaciones", "", async delegate { await CheckForUpdatesAsync(true); }));
 
-            if (!string.IsNullOrWhiteSpace(_preparedUpdateInstallerPath) && File.Exists(_preparedUpdateInstallerPath))
+            // Menu de actualizaciones dinamico
+            if (_updateDownloading)
+            {
+                menu.Items.Add(CreateMenuItem("Descargando actualización...", "", delegate
+                {
+                    if (_updateCts != null && !_updateCts.IsCancellationRequested)
+                    {
+                        _updateCts.Cancel();
+                        _status.Text = "Cancelando descarga...";
+                    }
+                }));
+            }
+            else if (_updateAvailable && !string.IsNullOrWhiteSpace(_preparedUpdateInstallerPath) && File.Exists(_preparedUpdateInstallerPath))
             {
                 string preparedVersion = _preparedUpdateManifest == null ? string.Empty : " v" + _preparedUpdateManifest.Version;
-                menu.Items.Add(CreateMenuItem("Reiniciar para aplicar" + preparedVersion, "", delegate { ApplyPreparedUpdateAndRestart(); }));
+                ToolStripMenuItem applyItem = CreateMenuItem("Reiniciar para aplicar" + preparedVersion, "", delegate { ApplyPreparedUpdateAndRestart(); });
+                applyItem.Font = new Font(Font, FontStyle.Bold);
+                applyItem.ForeColor = Color.LimeGreen;
+                menu.Items.Add(applyItem);
+            }
+            else
+            {
+                menu.Items.Add(CreateMenuItem("Buscar actualizaciones", "", async delegate { await CheckForUpdatesAsync(true); }));
             }
 
             menu.Items.Add(CreateMenuItem("Notas de actualización", "v" + _updateManifest.Version, delegate { NavigateActive(UpdatedUrl); }));
@@ -1936,6 +1971,27 @@ namespace GXLightBrowser
             await PrepareUpdateAsync(latest, true);
         }
 
+        private async Task PrepareUpdateSilentAsync(UpdateManifest manifest)
+        {
+            if (manifest == null || string.IsNullOrWhiteSpace(manifest.DownloadUrl))
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(_preparedUpdateInstallerPath) && File.Exists(_preparedUpdateInstallerPath))
+            {
+                _updateAvailable = true;
+                return;
+            }
+
+            if (_updateDownloading)
+            {
+                return;
+            }
+
+            await PrepareUpdateAsync(manifest, false);
+        }
+
         private async Task PrepareUpdateAsync(UpdateManifest manifest, bool userRequested)
         {
             if (manifest == null || string.IsNullOrWhiteSpace(manifest.DownloadUrl))
@@ -1945,7 +2001,7 @@ namespace GXLightBrowser
 
             if (!string.IsNullOrWhiteSpace(_preparedUpdateInstallerPath) && File.Exists(_preparedUpdateInstallerPath))
             {
-                _status.Text = "Actualizacion " + manifest.Version + " lista. Reinicia Gan Browser para aplicarla.";
+                _updateAvailable = true;
                 if (userRequested)
                 {
                     PromptToApplyPreparedUpdate();
@@ -1953,33 +2009,67 @@ namespace GXLightBrowser
                 return;
             }
 
-            string installerPath = Path.Combine(Path.GetTempPath(), "GXLightBrowser-Setup-" + manifest.Version + "-x64.exe");
-            string hashPath = installerPath + ".sha256.txt";
+            if (_updateDownloading)
+            {
+                _status.Text = "Ya se esta descargando una actualizacion...";
+                return;
+            }
+
+            string installerPath = Path.Combine(Path.GetTempPath(), "GanBrowser-Setup-" + manifest.Version + "-x64.exe");
             try
             {
-                _status.Text = "Descargando actualizacion " + manifest.Version + " en segundo plano...";
-                await DownloadUpdateFileWithRetriesAsync(manifest.DownloadUrl, installerPath);
-                if (!string.IsNullOrWhiteSpace(manifest.Sha256Url))
-                {
-                    await DownloadUpdateFileWithRetriesAsync(manifest.Sha256Url, hashPath);
-                }
+                _updateDownloading = true;
+                _updateCts = new CancellationTokenSource();
+                CancellationToken ct = _updateCts.Token;
 
-                if (string.IsNullOrWhiteSpace(manifest.Sha256Url) || !VerifyInstallerHash(installerPath, hashPath))
+                CleanupOldInstallers(manifest.Version);
+                _status.Text = "Descargando actualizacion " + manifest.Version + "... 0%";
+
+                await DownloadUpdateFileWithProgressAsync(manifest.DownloadUrl, installerPath,
+                    delegate (double progress)
+                    {
+                        string msg = "Descargando actualizacion " + manifest.Version + "... " + (int)Math.Round(progress) + "%";
+                        BeginInvoke((MethodInvoker)delegate { _status.Text = msg; });
+                    }, ct);
+
+                if (ct.IsCancellationRequested)
                 {
                     File.Delete(installerPath);
-                    MessageBox.Show(this, "La actualizacion no tiene una comprobacion SHA-256 valida. No se aplicara el instalador.",
-                        "Actualizacion rechazada", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    _status.Text = "Descarga de actualizacion cancelada.";
+                    return;
+                }
+
+                bool hashValid = await VerifyInstallerHashAsync(installerPath, manifest, ct);
+                if (!hashValid)
+                {
+                    File.Delete(installerPath);
+                    _status.Text = "Actualizacion rechazada: hash no coincide.";
+                    if (userRequested)
+                    {
+                        MessageBox.Show(this, "La actualizacion no supero la verificación SHA-256. No se aplicara el instalador.",
+                            "Actualizacion rechazada", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                     return;
                 }
 
                 _preparedUpdateInstallerPath = installerPath;
                 _preparedUpdateManifest = manifest;
-                _status.Text = "Actualizacion " + manifest.Version + " lista. Reinicia Gan Browser para aplicarla.";
-                PromptToApplyPreparedUpdate();
+                _updateAvailable = true;
+                _status.Text = "Actualizacion " + manifest.Version + " lista. Ve a Menu > Reiniciar para aplicar.";
+
+                if (userRequested)
+                {
+                    PromptToApplyPreparedUpdate();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                _status.Text = "Descarga de actualizacion cancelada.";
             }
             catch (Exception ex)
             {
                 Logger.Error("Update download failed: " + ex.Message);
+                _status.Text = "Error al descargar actualizacion.";
                 if (userRequested)
                 {
                     MessageBox.Show(this, "No se pudo descargar o preparar la actualizacion." + Environment.NewLine + ex.Message,
@@ -1988,20 +2078,21 @@ namespace GXLightBrowser
             }
             finally
             {
-                if (string.IsNullOrWhiteSpace(_preparedUpdateInstallerPath))
-                {
-                    UpdateStatus();
-                }
+                _updateDownloading = false;
+                UpdateStatus();
             }
         }
 
-        private static async Task DownloadUpdateFileWithRetriesAsync(string url, string destinationPath)
+        private async Task DownloadUpdateFileWithProgressAsync(string url, string destinationPath,
+            Action<double> onProgress, CancellationToken ct)
         {
             const int maxAttempts = 3;
             Exception lastError = null;
 
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
+                ct.ThrowIfCancellationRequested();
+
                 try
                 {
                     if (File.Exists(destinationPath))
@@ -2009,10 +2100,31 @@ namespace GXLightBrowser
                         File.Delete(destinationPath);
                     }
 
-                    using (WebClient client = new WebClient())
+                    using (HttpResponseMessage response = await _httpClient.GetAsync(url,
+                        HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false))
                     {
-                        client.Headers[HttpRequestHeader.UserAgent] = "GXLightBrowser/" + VersionInfo.CurrentVersion;
-                        await client.DownloadFileTaskAsync(new Uri(url), destinationPath);
+                        response.EnsureSuccessStatusCode();
+                        long totalBytes = response.Content.Headers.ContentLength ?? -1;
+
+                        using (Stream contentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                        using (FileStream fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
+                        {
+                            byte[] buffer = new byte[8192];
+                            long readBytes = 0;
+                            int bytesRead;
+
+                            while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) > 0)
+                            {
+                                await fileStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                                readBytes += bytesRead;
+
+                                if (totalBytes > 0 && onProgress != null)
+                                {
+                                    double pct = (double)readBytes / totalBytes * 100.0;
+                                    onProgress(pct);
+                                }
+                            }
+                        }
                     }
 
                     if (!File.Exists(destinationPath) || new FileInfo(destinationPath).Length == 0)
@@ -2022,30 +2134,96 @@ namespace GXLightBrowser
 
                     return;
                 }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     lastError = ex;
-                    try
-                    {
-                        if (File.Exists(destinationPath))
-                        {
-                            File.Delete(destinationPath);
-                        }
-                    }
-                    catch
-                    {
-                    }
+                    try { if (File.Exists(destinationPath)) File.Delete(destinationPath); }
+                    catch { }
 
                     Logger.Warning("Update download attempt " + attempt + "/" + maxAttempts + " failed: " + ex.Message);
                 }
 
                 if (attempt < maxAttempts)
                 {
-                    await Task.Delay(attempt * 2500);
+                    await Task.Delay(attempt * 2500, ct).ConfigureAwait(false);
                 }
             }
 
             throw new IOException("No se pudo descargar la actualizacion despues de " + maxAttempts + " intentos.", lastError);
+        }
+
+        private static async Task<bool> VerifyInstallerHashAsync(string installerPath, UpdateManifest manifest, CancellationToken ct)
+        {
+            if (!File.Exists(installerPath))
+            {
+                return false;
+            }
+
+            string expectedSha256 = null;
+
+            // Prioridad 1: SHA-256 inline desde update.json (mas seguro, no depende de descarga externa)
+            if (!string.IsNullOrWhiteSpace(manifest.Sha256))
+            {
+                expectedSha256 = manifest.Sha256.Trim();
+            }
+            // Prioridad 2: SHA-256 desde archivo .sha256.txt externo
+            else if (!string.IsNullOrWhiteSpace(manifest.Sha256Url))
+            {
+                try
+                {
+                    string hashPath = installerPath + ".sha256.txt";
+                    using (HttpResponseMessage response = await _httpClient.GetAsync(manifest.Sha256Url, ct).ConfigureAwait(false))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        string content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        expectedSha256 = content.Trim().Split(' ')[0].Trim();
+                    }
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(expectedSha256))
+            {
+                return false;
+            }
+
+            using (SHA256 sha = SHA256.Create())
+            using (FileStream stream = File.OpenRead(installerPath))
+            {
+                byte[] hash = await Task.Run(() => sha.ComputeHash(stream), ct).ConfigureAwait(false);
+                string actual = BitConverter.ToString(hash).Replace("-", string.Empty);
+                return string.Equals(expectedSha256, actual, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        private static void CleanupOldInstallers(string currentVersion)
+        {
+            try
+            {
+                string tempDir = Path.GetTempPath();
+                string[] oldInstallers = Directory.GetFiles(tempDir, "GanBrowser-Setup-*-x64.exe");
+                foreach (string old in oldInstallers)
+                {
+                    if (!old.Contains("-" + currentVersion + "-"))
+                    {
+                        try { File.Delete(old); }
+                        catch { }
+                        string oldHash = old + ".sha256.txt";
+                        try { if (File.Exists(oldHash)) File.Delete(oldHash); }
+                        catch { }
+                    }
+                }
+            }
+            catch
+            {
+            }
         }
 
         private void PromptToApplyPreparedUpdate()
@@ -2078,6 +2256,9 @@ namespace GXLightBrowser
 
             try
             {
+                // Crear backup de rollback antes de aplicar actualizacion
+                CreateRollbackBackup();
+
                 SaveSession();
                 ProcessStartInfo startInfo = new ProcessStartInfo(_preparedUpdateInstallerPath);
                 startInfo.UseShellExecute = true;
@@ -2093,20 +2274,48 @@ namespace GXLightBrowser
             }
         }
 
-        private static bool VerifyInstallerHash(string installerPath, string hashPath)
+        private void CreateRollbackBackup()
         {
-            if (!File.Exists(installerPath) || !File.Exists(hashPath))
+            try
             {
-                return false;
-            }
+                string installDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                    "GanBrowser");
+                if (!Directory.Exists(installDir))
+                {
+                    installDir = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                        "GXLightBrowser");
+                }
+                if (!Directory.Exists(installDir))
+                {
+                    return;
+                }
 
-            string expected = File.ReadAllText(hashPath, Encoding.UTF8).Trim().Split(' ')[0].Trim();
-            using (SHA256 sha = SHA256.Create())
-            using (FileStream stream = File.OpenRead(installerPath))
+                string rollbackDir = Path.Combine(AppPaths.AppData, "rollback-v" + VersionInfo.CurrentVersion);
+                if (Directory.Exists(rollbackDir))
+                {
+                    Directory.Delete(rollbackDir, true);
+                }
+
+                Directory.CreateDirectory(rollbackDir);
+                foreach (string file in Directory.GetFiles(installDir, "*", SearchOption.TopDirectoryOnly))
+                {
+                    try
+                    {
+                        string dest = Path.Combine(rollbackDir, Path.GetFileName(file));
+                        File.Copy(file, dest, true);
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                Logger.Info("Rollback backup created at " + rollbackDir);
+            }
+            catch (Exception ex)
             {
-                byte[] hash = sha.ComputeHash(stream);
-                string actual = BitConverter.ToString(hash).Replace("-", string.Empty);
-                return string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase);
+                Logger.Warning("Could not create rollback backup: " + ex.Message);
             }
         }
 
@@ -4112,6 +4321,23 @@ namespace GXLightBrowser
             _shield.Text = _adBlockEnabled ? "Block Ads On" : "Block Ads Off";
             _shield.Accent = _adBlockEnabled ? Theme.Accent : Theme.Warning;
             _shield.Invalidate();
+
+            string updateInfo = string.Empty;
+            if (_updateAvailable && _preparedUpdateManifest != null)
+            {
+                updateInfo = "   actualizacion " + _preparedUpdateManifest.Version + " lista";
+                _menuButton.Text = "☰!";
+            }
+            else if (_updateDownloading)
+            {
+                updateInfo = "   descargando actualizacion...";
+                _menuButton.Text = "☰↓";
+            }
+            else
+            {
+                _menuButton.Text = "☰";
+            }
+
             _status.Text = "Bloqueador " + (_adBlockEnabled ? "activo" : "pausado") +
                 "   reglas: " + _adBlocker.RuleCount +
                 "   firewall: " + (_privacyFirewallEnabled ? "activo" : "pausado") +
@@ -4119,7 +4345,8 @@ namespace GXLightBrowser
                 "   bloqueadas en pestana: " + blocked +
                 (tab == null || tab.BlockedPopups == 0 ? string.Empty : "   popups bloqueados: " + tab.BlockedPopups) +
                 (tab == null || string.IsNullOrWhiteSpace(tab.LastBlockedRequest) ? string.Empty : "   ultima: " + Trim(tab.LastBlockedRequest, 70)) +
-                (tab == null || string.IsNullOrWhiteSpace(tab.NavigationNotice) ? string.Empty : "   " + tab.NavigationNotice);
+                (tab == null || string.IsNullOrWhiteSpace(tab.NavigationNotice) ? string.Empty : "   " + tab.NavigationNotice) +
+                updateInfo;
         }
 
         private void ApplyResponsiveMode()
