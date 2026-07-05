@@ -4,7 +4,7 @@ param(
 
     [string[]]$Assets = @(),
 
-    [string]$Repository = "wiimri/Gan-Browser",
+    [string]$Repository = "wiimri/Gan-Browser-Releases",
     [string]$Title = "",
     [string]$Notes = ""
 )

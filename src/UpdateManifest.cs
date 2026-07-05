@@ -12,8 +12,8 @@ namespace GXLightBrowser
     [DataContract]
     internal sealed class UpdateManifest
     {
-        public const string ManifestUrl = "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json";
-        public const string DefaultChangelogUrl = "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md";
+        public const string ManifestUrl = "https://raw.githubusercontent.com/wiimri/Gan-Browser-Releases/main/update.json";
+        public const string DefaultChangelogUrl = "https://raw.githubusercontent.com/wiimri/Gan-Browser-Releases/main/CHANGELOG.md";
 
         private static readonly HttpClient _http = new HttpClient();
 
@@ -59,7 +59,7 @@ namespace GXLightBrowser
                 Version = VersionInfo.CurrentVersion,
                 ReleaseName = VersionInfo.ReleaseName,
                 PublishedAt = "2026-06-11",
-                DownloadUrl = "https://github.com/wiimri/Gan-Browser/releases",
+                DownloadUrl = "https://github.com/wiimri/Gan-Browser-Releases/releases",
                 Sha256Url = string.Empty,
                 Sha256 = string.Empty,
                 SourceUrl = BrandInfo.RepositoryUrl,

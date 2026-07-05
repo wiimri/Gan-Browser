@@ -8,11 +8,11 @@ Usa Microsoft Edge WebView2 en vez de Electron. Eso permite que la aplicacion se
 
 ## Descargar Gan Browser
 
-[![Descargar Gan Browser para Windows](https://img.shields.io/badge/Descargar-Gan_Browser_para_Windows-4CE0BE?style=for-the-badge&logo=windows11&logoColor=11151B)](https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe)
+[![Descargar Gan Browser para Windows](https://img.shields.io/badge/Descargar-Gan_Browser_para_Windows-4CE0BE?style=for-the-badge&logo=windows11&logoColor=11151B)](https://github.com/wiimri/Gan-Browser-Releases/releases/latest/download/GanBrowser-Setup-x64.exe)
 
-- [Descargar el instalador de la ultima version](https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe)
-- [Ver todas las versiones publicadas](https://github.com/wiimri/Gan-Browser/releases)
-- [Comprobar el SHA-256 del instalador](https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt)
+- [Descargar el instalador de la ultima version](https://github.com/wiimri/Gan-Browser-Releases/releases/latest/download/GanBrowser-Setup-x64.exe)
+- [Ver todas las versiones publicadas](https://github.com/wiimri/Gan-Browser-Releases/releases)
+- [Comprobar el SHA-256 del instalador](https://github.com/wiimri/Gan-Browser-Releases/releases/latest/download/GanBrowser-Setup-x64.sha256.txt)
 
 > Para instalar el navegador, descarga `GanBrowser-Setup-x64.exe` desde **Releases**. La opcion **Code > Download ZIP** descarga solamente el codigo fuente.
 
@@ -71,15 +71,15 @@ Cuando una nueva version se ejecuta por primera vez, el navegador abre `gxlight:
 Desde `1.2`, el aviso de novedades se lee desde `update.json` en GitHub:
 
 ```text
-https://raw.githubusercontent.com/wiimri/Gan-Browser/main/update.json
+https://raw.githubusercontent.com/wiimri/Gan-Browser-Releases/main/update.json
 ```
 
 Eso permite cambiar el texto de novedades, links y version publicada desde GitHub. Si el navegador no puede conectar a GitHub, usa las notas locales compiladas como respaldo.
 
-El historico completo de cambios esta en `CHANGELOG.md`:
+El historico completo de cambios esta en el repositorio de actualizaciones:
 
 ```text
-https://github.com/wiimri/Gan-Browser/blob/main/CHANGELOG.md
+https://github.com/wiimri/Gan-Browser-Releases/blob/main/CHANGELOG.md
 ```
 
 `Menu > Buscar actualizaciones` compara la version instalada con `update.json`. Si hay una version mayor,
@@ -149,8 +149,8 @@ Antes de publicar se puede ejecutar solamente la comprobacion:
 El instalador y su comprobacion SHA-256 permanentes pueden descargarse desde:
 
 ```text
-https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe
-https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt
+https://github.com/wiimri/Gan-Browser-Releases/releases/latest/download/GanBrowser-Setup-x64.exe
+https://github.com/wiimri/Gan-Browser-Releases/releases/latest/download/GanBrowser-Setup-x64.sha256.txt
 ```
 
 ## Compatibilidad del cambio de nombre

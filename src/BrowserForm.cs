@@ -1962,7 +1962,7 @@ namespace GXLightBrowser
                 menu.Items.Add(CreateMenuItem("Buscar actualizaciones", "", async delegate { await CheckForUpdatesAsync(true); }));
             }
             menu.Items.Add(CreateMenuItem("Descargar desde GitHub", "", delegate {
-                try { Process.Start("https://github.com/wiimri/Gan-Browser/releases"); } catch { }
+                try { Process.Start("https://github.com/wiimri/Gan-Browser-Releases/releases"); } catch { }
             }));
             menu.Items.Add(CreateMenuItem("Notas de actualización", "v" + _updateManifest.Version, delegate { NavigateActive(UpdatedUrl); }));
             menu.Items.Add(CreateMenuItem("Herramientas de desarrollo", "F12", delegate
