@@ -1015,8 +1015,12 @@ namespace GXLightBrowser
                 if (sourceTab.SiteCompatibilityMode)
                 {
                     sourceTab.NavigationNotice = IsYouTubeHost(sourceTab.LastNavigationHost)
-                        ? "Modo compatibilidad YouTube: Gan Guard pausado para evitar bloqueos del reproductor."
+                        ? "Modo compatibilidad YouTube: Gan Guard activo."
                         : "Modo compatibilidad Crunchyroll: Gan Guard pausado para este sitio.";
+                }
+                if (IsYouTubeHost(sourceTab.LastNavigationHost) && sourceTab.WebView != null && sourceTab.WebView.CoreWebView2 != null)
+                {
+                    sourceTab.WebView.CoreWebView2.ExecuteScriptAsync(YouTubeShieldsScript(_adBlockEnabled));
                 }
             }
 
@@ -4649,8 +4653,8 @@ namespace GXLightBrowser
             if (!enabled)
             {
                 return @"(() => {
-  const isYouTube = /(\.|^)youtube\.com$/.test(location.hostname) || location.hostname === 'youtu.be';
-  if (!isYouTube) return;
+  const isYT = /(\.|^)youtube\.com$/.test(location.hostname) || location.hostname === 'youtu.be';
+  if (!isYT) return;
   window.__gxLightAdsEnabled = true;
   window.__gxLightYouTubeCompatibilityMode = true;
   window.__gxLightRunYouTubeShields = function(){};
@@ -4658,156 +4662,126 @@ namespace GXLightBrowser
             }
 
             return @"(function() {
-    const isYT = /(\.|^)youtube\.com$/.test(location.hostname) || location.hostname === 'youtu.be';
+    var isYT = /(\.|^)youtube\.com$/.test(location.hostname) || location.hostname === 'youtu.be';
     if (!isYT) return;
     window.__gxLightAdsEnabled = false;
     window.__gxLightYouTubeCompatibilityMode = true;
 
-    var _nativeParse = JSON.parse.bind(JSON);
-    var _nativeStringify = JSON.stringify;
+    var _parse = JSON.parse.bind(JSON);
+    var _stringify = JSON.stringify;
 
-    var adKeyPatterns = ['adplacement','adslot','playerad','adbreak','admodule','adrenderer','linearad','instreamad','adsequence','no_ads','adload','adinterrupt','adpods','adpod','adinfo','adtag','adurl','adblock','adwarning','adoverlay','adimage','adtext','adtitle','adbutton','sponsored','promotedvideo','recommendedad','adunit','adtype','adformat','adcontent','adnetwork','adconfig','adparams','preroll','midroll','postroll','admeta','addata','adobject','adsystem','vast','vmap','companionad','bannerad','overlayad'];
-
-    function isAdKey(key) {
-        var lower = (typeof key === 'string' ? key : String(key)).toLowerCase();
-        for (var i = 0; i < adKeyPatterns.length; i++) {
-            if (lower.indexOf(adKeyPatterns[i]) >= 0) return true;
-        }
-        return false;
-    }
-
-    function deleteAdProps(obj, depth) {
-        if (!obj || typeof obj !== 'object' || depth > 30) return;
-        var keys = Object.keys(obj);
-        for (var i = 0; i < keys.length; i++) {
-            if (isAdKey(keys[i])) {
-                try { delete obj[keys[i]]; } catch(e) {}
-            }
-        }
-        for (var i = 0; i < keys.length; i++) {
-            var val = obj[keys[i]];
-            if (val && typeof val === 'object') {
-                if (Array.isArray(val)) {
-                    for (var j = 0; j < val.length; j++) {
-                        if (val[j] && typeof val[j] === 'object') deleteAdProps(val[j], depth + 1);
-                    }
-                } else {
-                    deleteAdProps(val, depth + 1);
-                }
-            }
-        }
-    }
-
-    function guardGlobal(name) {
-        var stored;
-        try {
-            Object.defineProperty(window, name, {
-                configurable: true, enumerable: true,
-                get: function() { return stored; },
-                set: function(v) { if (v && typeof v === 'object') deleteAdProps(v, 0); stored = v; }
-            });
-        } catch(e) {}
-    }
-    guardGlobal('ytInitialPlayerResponse');
-    guardGlobal('ytInitialData');
-    try {
-        var _ytCfg = window.ytcfg;
-        Object.defineProperty(window, 'ytcfg', {
-            configurable: true,
-            get: function() { return _ytCfg; },
-            set: function(v) { if (v && v.data && typeof v.data === 'object') deleteAdProps(v.data, 0); _ytCfg = v; }
-        });
-    } catch(e) {}
-
-    JSON.parse = function(str, reviver) {
-        var r = _nativeParse(str, reviver);
-        if (r && typeof r === 'object') deleteAdProps(r, 0);
-        return r;
+    JSON.parse = function(s, r) {
+        var v = _parse(s, r);
+        if (v && typeof v === 'object') stripAds(v);
+        return v;
     };
 
-    var _resJson = Response.prototype.json;
+    var _rjson = Response.prototype.json;
     Response.prototype.json = function() {
-        return _resJson.call(this).then(function(d) {
-            if (d && typeof d === 'object') deleteAdProps(d, 0);
+        return _rjson.call(this).then(function(d) {
+            if (d && typeof d === 'object') stripAds(d);
             return d;
         });
     };
 
     var _fetch = window.fetch;
     window.fetch = function(req, init) {
-        return _fetch.call(window, req, init).then(function(resp) {
-            var url = typeof req === 'string' ? req : (req && req.url ? req.url : '');
-            if (url.indexOf('/youtubei/v1/') >= 0 || url.indexOf('player?') >= 0 || url.indexOf('get_watch?') >= 0) {
-                var ct = resp.headers.get('content-type') || '';
-                if (ct.indexOf('json') >= 0 || ct.indexOf('text') >= 0 || ct.indexOf('javascript') >= 0) {
-                    return resp.clone().text().then(function(text) {
-                        try {
-                            var data = _nativeParse(text);
-                            deleteAdProps(data, 0);
-                            return new Response(_nativeStringify(data), {
-                                status: resp.status,
-                                statusText: resp.statusText,
-                                headers: resp.headers
-                            });
-                        } catch(e) { return resp; }
-                    });
-                }
-            }
-            return resp;
+        return _fetch.call(window, req, init).then(function(r) {
+            var u = (typeof req === 'string' ? req : (req && req.url)) || '';
+            if (u.indexOf('/youtubei/v1/') < 0 && u.indexOf('player?') < 0 && u.indexOf('get_watch?') < 0) return r;
+            var ct = (r.headers.get('content-type') || '') + '';
+            if (ct.indexOf('json') < 0 && ct.indexOf('text') < 0 && ct.indexOf('javascript') < 0) return r;
+            return r.clone().text().then(function(t) {
+                try {
+                    var d = _parse(t); stripAds(d);
+                    return new Response(_stringify(d), { status: r.status, statusText: r.statusText, headers: r.headers });
+                } catch(e) { return r; }
+            });
         });
     };
 
     var _then = Promise.prototype.then;
-    Promise.prototype.then = function(ful, rej) {
-        if (typeof ful === 'function') {
-            var s = ful.toString().replace(/\s/g, '');
-            if (s.indexOf('onAbnormalityDetected') >= 0 || s.indexOf('abnormality') >= 0) {
-                return _then.call(this, function(){}, rej);
-            }
+    Promise.prototype.then = function(f, r) {
+        if (typeof f === 'function') {
+            var s = f.toString().replace(/\s/g, '');
+            if (s.indexOf('onAbnormalityDetected') >= 0 || s.indexOf('abnormality') >= 0) return _then.call(this, function(){}, r);
         }
-        return _then.call(this, ful, rej);
+        return _then.call(this, f, r);
     };
 
-    var _has = Map.prototype.has;
+    var _mapHas = Map.prototype.has;
     Map.prototype.has = function(k) {
-        if (k === 'onSnackbarMessage') return false;
-        return _has.call(this, k);
+        if (k === 'onSnackbarMessage' || k === 'onAdNoticeMessage') return false;
+        return _mapHas.call(this, k);
     };
 
-    function injectCss() {
-        if (document.getElementById('gxlight-ad-css')) return;
+    function stripAds(o, d) {
+        if (!o || typeof o !== 'object' || (d || 0) > 20) return;
+        try {
+            var keys = Object.keys(o);
+            for (var i = 0; i < keys.length; i++) {
+                var k = keys[i], kl = k.toLowerCase();
+                if (kl.indexOf('ad') === 0 || kl.indexOf('ad') === 1 || kl.indexOf('adbreak') >= 0 || kl.indexOf('adslot') >= 0 || kl.indexOf('adplace') >= 0 || kl.indexOf('playerad') >= 0 || kl.indexOf('linearad') >= 0 || kl.indexOf('instreamad') >= 0 || kl.indexOf('adsequence') >= 0 || kl.indexOf('preroll') >= 0 || kl.indexOf('midroll') >= 0 || kl.indexOf('postroll') >= 0 || kl.indexOf('vast') >= 0 || kl.indexOf('vmap') >= 0 || kl.indexOf('sponsored') >= 0 || kl.indexOf('promoted') >= 0 || kl.indexOf('companionad') >= 0 || kl.indexOf('bannerad') >= 0 || kl.indexOf('overlayad') >= 0 || kl.indexOf('admodul') >= 0 || kl.indexOf('no_ads') >= 0 || kl.indexOf('adload') >= 0 || kl.indexOf('adinterrupt') >= 0 || kl.indexOf('adpod') >= 0 || kl.indexOf('adsystem') >= 0 || kl.indexOf('adwarning') >= 0 || kl.indexOf('adblock') >= 0 || kl.indexOf('adtext') >= 0 || kl.indexOf('adtitle') >= 0 || kl.indexOf('adimage') >= 0 || kl.indexOf('adoverlay') >= 0 || kl.indexOf('adunit') >= 0 || kl.indexOf('admeta') >= 0 || kl.indexOf('addata') >= 0) {
+                    try { delete o[k]; } catch(e) {}
+                }
+            }
+            for (var i = 0; i < keys.length; i++) {
+                var v = o[keys[i]];
+                if (v && typeof v === 'object') {
+                    if (Array.isArray(v)) { for (var j = 0; j < v.length; j++) { if (v[j] && typeof v[j] === 'object') stripAds(v[j], (d||0)+1); } }
+                    else { stripAds(v, (d||0)+1); }
+                }
+            }
+        } catch(e) {}
+    }
+
+    function guard(n) {
+        var v;
+        try { Object.defineProperty(window, n, { configurable: true, enumerable: true, get: function(){return v;}, set: function(x){if(x&&typeof x==='object'){try{stripAds(x,0)}catch(e){}}v=x;} }); } catch(e) {}
+    }
+    guard('ytInitialPlayerResponse');
+    guard('ytInitialData');
+
+    function injectCSS() {
+        if (document.getElementById('gxlight-css')) return;
         var s = document.createElement('style');
-        s.id = 'gxlight-ad-css';
-        s.textContent = '#masthead-ad,#player-ads,ytd-ad-slot-renderer,ytd-companion-slot-renderer,ytd-promoted-video-renderer,ytd-display-ad-renderer,ytd-video-masthead-ad-v3-renderer,.ytp-ad-progress,.ytp-ad-progress-list,ytd-statement-banner-renderer,.ytp-ad-module,.video-ads,.ytp-ad-overlay-container,.ytp-ad-player-overlay,.ytp-ad-image-overlay,ytd-action-companion-ad-renderer,ytd-in-feed-ad-layout-renderer,ytd-player-legacy-desktop-watch-ads-renderer,ytd-engagement-panel-section-list-renderer[target-id=""engagement-panel-ads""]{display:none!important;width:0!important;height:0!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}';
+        s.id = 'gxlight-css';
+        s.textContent = '#masthead-ad,#player-ads,ytd-ad-slot-renderer,ytd-companion-slot-renderer,ytd-promoted-video-renderer,ytd-display-ad-renderer,ytd-video-masthead-ad-v3-renderer,.ytp-ad-progress,.ytp-ad-progress-list,ytd-statement-banner-renderer,.ytp-ad-module,.video-ads,.ytp-ad-overlay-container,.ytp-ad-player-overlay,.ytp-ad-image-overlay,ytd-action-companion-ad-renderer,ytd-in-feed-ad-layout-renderer,ytd-player-legacy-desktop-watch-ads-renderer,ytd-engagement-panel-section-list-renderer[target-id=""engagement-panel-ads""],ytd-ad-slot-renderer{display:none!important;width:0!important;height:0!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;position:absolute!important;overflow:hidden!important;clip:rect(0,0,0,0)!important}';
         (document.head || document.documentElement).appendChild(s);
     }
 
-    function clickSkips() {
-        var skip = document.querySelector('.ytp-ad-skip-button,.ytp-ad-skip-button-modern,.ytp-skip-ad-button,button[aria-label^=""Skip""],button[aria-label^=""Saltar""],button[aria-label^=""Omitir""],button[aria-label*=""skip""]');
-        if (skip && skip.getClientRects().length > 0 && !skip.disabled && typeof skip.click === 'function') skip.click();
-    }
+    function killAds() {
+        document.querySelectorAll('#masthead-ad,#player-ads,.ytp-ad-module,.video-ads,ytd-ad-slot-renderer,ytd-companion-slot-renderer,ytd-promoted-video-renderer,ytd-display-ad-renderer,ytd-video-masthead-ad-v3-renderer,.ytp-ad-progress,.ytp-ad-progress-list,ytd-statement-banner-renderer,.ytp-ad-overlay-container,.ytp-ad-player-overlay,.ytp-ad-image-overlay,ytd-action-companion-ad-renderer,ytd-in-feed-ad-layout-renderer,ytd-player-legacy-desktop-watch-ads-renderer,ytd-engagement-panel-section-list-renderer[target-id=""engagement-panel-ads""]').forEach(function(el){el.remove();});
 
-    function cleanupDom() {
-        var sel = '#masthead-ad,#player-ads,ytd-ad-slot-renderer,ytd-companion-slot-renderer,ytd-promoted-video-renderer,ytd-display-ad-renderer,ytd-video-masthead-ad-v3-renderer,.ytp-ad-progress,.ytp-ad-progress-list,ytd-statement-banner-renderer,.ytp-ad-module,.video-ads,.ytp-ad-overlay-container,.ytp-ad-player-overlay,.ytp-ad-image-overlay,ytd-action-companion-ad-renderer,ytd-in-feed-ad-layout-renderer,ytd-player-legacy-desktop-watch-ads-renderer,ytd-engagement-panel-section-list-renderer[target-id=""engagement-panel-ads""]';
-        document.querySelectorAll(sel).forEach(function(el) { el.remove(); });
-        clickSkips();
+        var skip = document.querySelector('.ytp-ad-skip-button,.ytp-ad-skip-button-modern,.ytp-skip-ad-button,button[aria-label^=""Skip""],button[aria-label^=""Saltar""],button[aria-label^=""Omitir""],button[aria-label*=""skip""],button[aria-label*=""Skip""]');
+        if (skip && skip.getClientRects && skip.getClientRects().length > 0 && !skip.disabled) { try { skip.click(); } catch(e) {} }
+
+        var player = document.querySelector('.html5-video-player');
+        if (player && (player.classList.contains('ad-showing') || player.classList.contains('ad-interrupting'))) {
+            var video = document.querySelector('video');
+            if (video && video.duration > 0) {
+                try {
+                    video.currentTime = video.duration - 0.5;
+                } catch(e) {}
+            }
+            try { player.classList.remove('ad-showing', 'ad-interrupting'); } catch(e) {}
+        }
     }
 
     if (document.documentElement) {
-        injectCss();
-        cleanupDom();
-        new MutationObserver(cleanupDom).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
-        setInterval(cleanupDom, 2000);
+        injectCSS();
+        killAds();
+        new MutationObserver(killAds).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+        setInterval(killAds, 500);
     } else {
         document.addEventListener('DOMContentLoaded', function() {
-            injectCss();
-            cleanupDom();
-            new MutationObserver(cleanupDom).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
-            setInterval(cleanupDom, 2000);
+            injectCSS();
+            killAds();
+            new MutationObserver(killAds).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+            setInterval(killAds, 500);
         });
     }
-
-    window.__gxLightRunYouTubeShields = cleanupDom;
+    window.__gxLightRunYouTubeShields = killAds;
 })();";
         }
 

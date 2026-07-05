@@ -139,7 +139,8 @@ namespace GXLightBrowser
         private static bool IsCriticalYouTubeBlock(string request, string host)
         {
             if (!IsHostOrSubdomain(host, "youtube.com") &&
-                !IsHostOrSubdomain(host, "youtubei.googleapis.com"))
+                !IsHostOrSubdomain(host, "youtubei.googleapis.com") &&
+                !IsHostOrSubdomain(host, "googlevideo.com"))
             {
                 return false;
             }
@@ -151,7 +152,9 @@ namespace GXLightBrowser
                 request.IndexOf("/api/stats/delayplay", StringComparison.Ordinal) >= 0 ||
                 request.IndexOf("/pagead/", StringComparison.Ordinal) >= 0 ||
                 request.IndexOf("/get_midroll", StringComparison.Ordinal) >= 0 ||
-                request.IndexOf("/ptracking", StringComparison.Ordinal) >= 0;
+                request.IndexOf("/ptracking", StringComparison.Ordinal) >= 0 ||
+                request.IndexOf("/videostats", StringComparison.Ordinal) >= 0 ||
+                request.IndexOf("/adunit", StringComparison.Ordinal) >= 0;
         }
 
         private static bool IsHostOrSubdomain(string host, string domain)
