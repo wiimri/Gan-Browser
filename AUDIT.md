@@ -2,10 +2,11 @@
 
 Fecha: 2026-06-23
 
-Version actual: 2.15
+Version actual: 2.16
 
 ## Revision de mantenimiento 2026-06-15
 
+- Version `2.16`: YouTube Shields reescrito con interceptación de ytInitialPlayerResponse, deleteAdProps, polling y 45 patrones de anuncio.
 - Version `2.15`: YouTube Shields mejorado con deepPrune, CSS injection, skip automático y cache busting corregido.
 - Version `2.14`: reducción de parpadeo (flickering) y dibujado de doble búfer en BorderlessTabControl y BrowserForm.
 - Version `2.13`: actualizador silencioso con progreso, cancelacion, rollback e integridad SHA-256 inline en `update.json`.

@@ -2,18 +2,18 @@ namespace GXLightBrowser
 {
     internal static class VersionInfo
     {
-        public const string CurrentVersion = "2.15";
-        public const string ReleaseName = "Gan Browser 2.15";
+        public const string CurrentVersion = "2.16";
+        public const string ReleaseName = "Gan Browser 2.16";
 
         public static string[] Highlights()
         {
             return new string[]
             {
-                "YouTube Shields mejorado: inyección JavaScript más robusta contra anuncios.",
-                "Capa adicional de bloqueo CSS + MutationObserver para elementos dinámicos.",
-                "Skip automático de anuncios que logren pasar el filtro inicial.",
-                "Más claves de anuncio bloqueadas en respuestas JSON (deepPrune mejorado).",
-                "Corregido el cache busting en JSON.parse override para evitar condiciones de carrera.",
+                "YouTube Shields reescrito: intercepta ytInitialPlayerResponse/ytInitialData via Object.defineProperty.",
+                "deleteAdProps con 45 patrones de clave y delete real (no empty array).",
+                "Polling cada 2s + MutationObserver con atributos para ads dinámicos.",
+                "Anti-adblock neutralizado (onAbnormalityDetected) y snackbars bloqueados.",
+                "Auto-update con fallback SHA-256 y descarga directa desde GitHub.",
                 "Nuevas reglas de red en AdBlocker para endpoints de YouTube."
             };
         }

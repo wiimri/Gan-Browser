@@ -2,6 +2,22 @@
 
 Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Light Browser.
 
+## v2.16 - YouTube Shields reescrito con bloqueo agresivo de anuncios
+
+Fecha: `2026-07-05`
+
+Cambios:
+
+- YouTube Shields completamente reescrito con interceptación de `ytInitialPlayerResponse` y `ytInitialData` via `Object.defineProperty` antes de que YouTube los procese.
+- `deleteAdProps()` con 45 patrones de clave (adplacement, adslot, playerad, adbreak, preroll, midroll, vast, vmap, sponsored, promotedvideo, etc.) y `delete` real de propiedades.
+- `isAdKey()` con matching flexible por substring para atrapar cualquier propiedad relacionada con anuncios.
+- Polling cada 2 segundos (`setInterval`) + MutationObserver con seguimiento de atributos (`class`) para ads dinámicos.
+- Content-Type más permisivo en fetch override (acepta text/plain y javascript ademas de json).
+- Skip automático de anuncios con selectores ampliados.
+- Anti-adblock neutralizado (onAbnormalityDetected) y snackbars de advertencia bloqueados via Map.prototype.has.
+- CSS injection con display:none para 20+ selectores de anuncio.
+- Auto-update con fallback SHA-256: si no hay hash disponible, pregunta al usuario si quiere aplicar igual o descargar desde GitHub.
+
 ## v2.15 - YouTube Shields mejorado y bloqueo multicapa
 
 Fecha: `2026-07-05`
@@ -21,7 +37,7 @@ Cambios:
 
 ## Version actual
 
-- Version publicada: `2.15`
+- Version publicada: `2.16`
 - Fecha: `2026-07-05`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>

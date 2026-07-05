@@ -1,6 +1,6 @@
 {
-  "version": "2.15",
-  "releaseName": "Gan Browser 2.15",
+  "version": "2.16",
+  "releaseName": "Gan Browser 2.16",
   "publishedAt": "2026-07-05",
   "downloadUrl": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe",
   "sha256Url": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt",
@@ -8,11 +8,10 @@
   "sourceUrl": "https://github.com/wiimri/Gan-Browser",
   "changelogUrl": "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md",
   "highlights": [
-    "YouTube Shields mejorado: inyección JavaScript más robusta contra anuncios.",
-    "Capa adicional de bloqueo CSS + MutationObserver para elementos dinámicos.",
-    "Skip automático de anuncios que logren pasar el filtro inicial.",
-    "Más claves de anuncio bloqueadas en respuestas JSON (deepPrune mejorado).",
-    "Corregido el cache busting en JSON.parse override para evitar condiciones de carrera.",
-    "Nuevas reglas de red en AdBlocker para endpoints de YouTube."
+    "YouTube Shields reescrito: intercepta datos de anuncios antes de que YouTube los procese.",
+    "deleteAdProps con 45 patrones de clave y eliminación real de propiedades.",
+    "Polling cada 2s + MutationObserver para ads dinámicos y skip automático.",
+    "Anti-adblock neutralizado y snackbars de advertencia bloqueados.",
+    "Auto-update con fallback SHA-256 y descarga directa desde GitHub."
   ]
 }
