@@ -1,0 +1,112 @@
+See the end of this message for details on invoking 
+just-in-time (JIT) debugging instead of this dialog box.
+
+************** Exception Text **************
+System.ArgumentException: Parameter is not valid.
+   at System.Drawing.Image.get_RawFormat()
+   at System.Drawing.Graphics.IgnoreMetafileErrors(Image image, Int32& errorStatus)
+   at System.Drawing.Graphics.DrawImage(Image image, Int32 x, Int32 y, Int32 width, Int32 height)
+   at System.Drawing.Graphics.DrawImage(Image image, Rectangle rect)
+   at GXLightBrowser.ChromeButton.OnPaint(PaintEventArgs pevent)
+   at System.Windows.Forms.Control.PaintWithErrorHandling(PaintEventArgs e, Int16 layer)
+   at System.Windows.Forms.Control.WmPaint(Message& m)
+   at System.Windows.Forms.Control.WndProc(Message& m)
+   at System.Windows.Forms.ButtonBase.WndProc(Message& m)
+   at System.Windows.Forms.Button.WndProc(Message& m)
+   at System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)
+
+
+************** Loaded Assemblies **************
+mscorlib
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9325.0 built by: NET481REL1LAST_25H2_C
+    CodeBase: file:///C:/Windows/Microsoft.NET/Framework64/v4.0.30319/mscorlib.dll
+----------------------------------------
+GXLightBrowser
+    Assembly Version: 0.0.0.0
+    Win32 Version: 0.0.0.0
+    CodeBase: file:///C:/Program%20Files/GXLightBrowser/GXLightBrowser.exe
+----------------------------------------
+System
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9333.0 built by: NET481REL1LAST_25H2_B
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System/v4.0_4.0.0.0__b77a5c561934e089/System.dll
+----------------------------------------
+System.Windows.Forms
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9325.0 built by: NET481REL1LAST_25H2_C
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Windows.Forms/v4.0_4.0.0.0__b77a5c561934e089/System.Windows.Forms.dll
+----------------------------------------
+System.Drawing
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9221.0 built by: NET481REL1LAST_25H2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Drawing/v4.0_4.0.0.0__b03f5f7f11d50a3a/System.Drawing.dll
+----------------------------------------
+System.Configuration
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9221.0 built by: NET481REL1LAST_25H2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Configuration/v4.0_4.0.0.0__b03f5f7f11d50a3a/System.Configuration.dll
+----------------------------------------
+System.Xml
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9221.0 built by: NET481REL1LAST_25H2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Xml/v4.0_4.0.0.0__b77a5c561934e089/System.Xml.dll
+----------------------------------------
+System.Core
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9335.0 built by: NET481REL1LAST_25H2_B
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Core/v4.0_4.0.0.0__b77a5c561934e089/System.Core.dll
+----------------------------------------
+Accessibility
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9221.0 built by: NET481REL1LAST_25H2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/Accessibility/v4.0_4.0.0.0__b03f5f7f11d50a3a/Accessibility.dll
+----------------------------------------
+Microsoft.Web.WebView2.Core
+    Assembly Version: 1.0.3537.50
+    Win32 Version: 1.0.3537.50
+    CodeBase: file:///C:/Program%20Files/GXLightBrowser/Microsoft.Web.WebView2.Core.DLL
+----------------------------------------
+System.Security
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9333.0 built by: NET481REL1LAST_25H2_B
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Security/v4.0_4.0.0.0__b03f5f7f11d50a3a/System.Security.dll
+----------------------------------------
+Microsoft.Web.WebView2.WinForms
+    Assembly Version: 1.0.3537.50
+    Win32 Version: 1.0.3537.50
+    CodeBase: file:///C:/Program%20Files/GXLightBrowser/Microsoft.Web.WebView2.WinForms.DLL
+----------------------------------------
+System.Runtime.Serialization
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9333.0 built by: NET481REL1LAST_25H2_B
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Runtime.Serialization/v4.0_4.0.0.0__b77a5c561934e089/System.Runtime.Serialization.dll
+----------------------------------------
+SMDiagnostics
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9333.0 built by: NET481REL1LAST_25H2_B
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/SMDiagnostics/v4.0_4.0.0.0__b77a5c561934e089/SMDiagnostics.dll
+----------------------------------------
+System.ServiceModel.Internals
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.8.9333.0 built by: NET481REL1LAST_25H2_B
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.ServiceModel.Internals/v4.0_4.0.0.0__31bf3856ad364e35/System.ServiceModel.Internals.dll
+----------------------------------------
+
+************** JIT Debugging **************
+To enable just-in-time (JIT) debugging, the .config file for this
+application or computer (machine.config) must have the
+jitDebugging value set in the system.windows.forms section.
+The application must also be compiled with debugging
+enabled.
+
+For example:
+
+<configuration>
+    <system.windows.forms jitDebugging="true" />
+</configuration>
+
+When JIT debugging is enabled, any unhandled exception
+will be sent to the JIT debugger registered on the computer
+rather than be handled by this dialog box.
+

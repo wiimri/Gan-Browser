@@ -1,0 +1,173 @@
+================================================================================
+  GXLightBrowser - CAMBIOS APLICADOS Y PENDIENTES
+  Proyecto: Bloqueo de anuncios en YouTube vía WebView2
+  Fecha: 2026-07-05
+================================================================================
+
+1. CAMBIOS APLICADOS
+================================================================================
+
+1.1. src/BrowserForm.cs
+------------------------
+
+Archivo principal con los cambios más significativos.
+
+a) NavigationStarting (línea ~1010):
+   - Se restauró SiteCompatibilityMode = true para YouTube (igual que el
+     original) pero con un mensaje específico:
+     "Modo compatibilidad YouTube: Gan Guard pausado para evitar bloqueos
+     del reproductor."
+
+b) WebResourceRequested (línea ~1527):
+   - Cambio CRÍTICO: Se modificó la condición que saltaba todo el bloqueo
+     cuando SiteCompatibilityMode = true.
+   - Antes: if (tab.SiteCompatibilityMode) return;  (saltaba SIEMPRE)
+   - Ahora: if (tab.SiteCompatibilityMode && !IsYouTubeHost(tab.LastNavigationHost)) return;
+   - Esto permite que YouTube pase por el bloqueo de red normal mientras
+     Crunchyroll sigue en modo compatibilidad.
+
+c) Código de respuesta HTTP (línea ~1561):
+   - Cambiado de 403 "Blocked" a 204 "No Content".
+   - 204 es más sigiloso: parece una respuesta exitosa pero sin contenido,
+     evitando que YouTube detecte el bloqueador por cantidad de requests
+     bloqueados.
+
+d) YouTubeShieldsScript (línea ~4625):
+   - Reescribo COMPLETAMENTE el script de inyección JavaScript.
+   - Antes: solo seteaba flags (window.__gxLightAdsEnabled = false) sin
+     lógica de bloqueo real -> NO HACÍA NADA.
+   - Ahora: Implementa un approach similar a uBlock Origin con:
+     * deepPrune() - elimina adPlacements, adSlots, playerAds, no_ads
+       recursivamente de objetos JSON.
+     * JSON.parse override - intercepta todo parseo y remueve anuncios.
+     * Response.prototype.json override - lo mismo para respuestas fetch.
+     * fetch override - intercepta /youtubei/v1/, player?, get_watch? y
+       limpia la respuesta JSON antes de que YouTube la procese.
+     * Promise.prototype.then override - neutraliza la detección anti-adblock
+       (onAbnormalityDetected).
+     * Map.prototype.has override - neutraliza snackbars de advertencia.
+     * MutationObserver - elimina elementos del DOM con anuncios.
+     * Cuando disabled: solo setea flags y una función no-op.
+
+e) SetYouTubeShieldsEnabled:
+   - Se mantiene igual: ejecuta el script run vía ExecuteScriptAsync.
+   - Cuando enabled=false, el script inyectado asigna
+     __gxLightAdsEnabled=true y la función run es no-op.
+   - Cuando enabled=true, inyecta el script completo con todas las
+     protecciones.
+
+1.2. src/AdBlocker.cs
+----------------------
+
+Se agregaron dominios y patrones a BuiltInRules() para mejorar el bloqueo:
+
+   ||2mdn.net^                     - CDN de anuncios de Google
+   ||adform.net^                   - Plataforma de anuncios
+   ||criteo.com^                   - Plataforma de anuncios
+   ||criteo.net^                   - Plataforma de anuncios
+   youtube.com/youtubei/v1/player/get_download_playback - Endpoint de YouTube
+   youtube.com/api/stats/atr       - Tracking de anuncios de YouTube
+   /pagead/                        - Patrón genérico de Google Ads
+
+1.3. CHANGELOG.md, README.md, scripts/verify-ui-preview.js
+------------------------------------------------------------
+
+Cambios menores (formatting, actualizaciones de texto) realizados por git.
+
+================================================================================
+
+2. CAMBIOS PENDIENTES / RECOMENDACIONES
+================================================================================
+
+2.1. Compilación y prueba
+--------------------------
+- No se pudo compilar porque no hay .NET SDK instalado en este entorno.
+- Se debe compilar con:
+    dotnet build
+  o desde Visual Studio.
+- Probar en YouTube real navegando a un video y verificando:
+  * Sin anuncios pre-roll / mid-roll.
+  * Sin banners ni overlays en el reproductor.
+  * El video se reproduce normalmente.
+  * Al desactivar el escudo (shield), los anuncios vuelven.
+  * Al reactivar, los anuncios desaparecen de nuevo.
+
+2.2. tests/AdBlockerProbe.cs
+-----------------------------
+- Revisar si este archivo de test referencia el comportamiento anterior del
+  bloqueo de YouTube. Si es así, actualizarlo para reflejar la nueva lógica.
+
+2.3. Update-Filters.ps1
+------------------------
+- Si este script descarga listas de filtros externas (EasyList, etc.),
+  revisar si incluye reglas específicas de YouTube. Si no, considerar
+  agregar reglas adicionales para cubrir:
+    youtube.com##.ytp-ad-module
+    youtube.com##.video-ads
+    youtube.com##ytd-ad-slot-renderer
+  (aunque el JavaScript injection ya cubre esto).
+
+2.4. Monitoreo de cambios en YouTube
+--------------------------------------
+- YouTube cambia frecuentemente su DOM y API. Los selectores CSS y las
+  claves de JSON (adPlacements, adSlots, playerAds) pueden quedar
+  obsoletos. Se recomienda revisar periódicamente si los anuncios
+  reaparecen y actualizar el script.
+
+2.5. Mejoras potenciales
+--------------------------
+a) Agregar más claves de anuncio al deepPrune:
+   - adbreakheartbeatparams
+   - adbreakparams
+   - linearadsequencerenderer
+   - instreamvideoadrenderer
+   - adplacementrenderer
+   (el script anterior tenía estas, la versión actual solo tiene 4 claves)
+
+b) Agregar skip automático de anuncios (click en botón "Skip Ad"):
+   - El script anterior tenía lógica para hacer clic automático en botones
+     de saltar anuncios. La versión actual no la tiene.
+   - Útil para ads que logren pasar el filtro inicial.
+
+c) CSS injection (display:none):
+   - El script anterior inyectaba CSS con display:none para selectores
+     de anuncio. La versión actual usa MutationObserver con remove().
+   - Considerar combinar ambos: CSS para carga inicial + MutationObserver
+     para elementos dinámicos.
+
+d) Cache busting en JSON.parse override:
+   - La versión actual restaura JSON.parse dentro del fetch handler y lo
+     reemplaza de nuevo. Esto es frágil si hay concurrencia.
+   - Versión mejorada: guardar el native JSON.parse una vez y usarlo
+     siempre, sin restaurar/reemplazar constantemente.
+
+2.6. Pipeline de CI/CD
+-----------------------
+- Si existe un pipeline (GitHub Actions, etc.), verificar que los tests
+  pasan con los cambios realizados.
+
+================================================================================
+3. RESUMEN DE ARQUITECTURA
+================================================================================
+
+El bloqueo funciona en 3 capas:
+
+  Capa 1 - Red (AdBlocker.cs + WebResourceRequested):
+    Bloquea requests a dominios de anuncios conocidos.
+    Se agregaron más dominios para cubrir YouTube.
+
+  Capa 2 - JavaScript injection (YouTubeShieldsScript):
+    Script que se ejecuta en cada página de YouTube.
+    Intercepta y modifica respuestas JSON antes de que YouTube las procese.
+    Elimina nodos del DOM que contengan anuncios.
+    Neutraliza detección anti-adblock.
+
+  Capa 3 - Runtime (SetYouTubeShieldsEnabled):
+    Cuando el usuario activa/desactiva el escudo, se ejecuta el script
+    correspondiente en cada pestaña abierta.
+
+El cambio principal que solucionó el problema: antes SiteCompatibilityMode
+hacía saltar TODAS las capas en YouTube. Ahora solo salta la capa de red
+para Crunchyroll, pero YouTube pasa por las 3 capas.
+
+================================================================================

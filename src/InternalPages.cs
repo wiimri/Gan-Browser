@@ -142,6 +142,7 @@ namespace GXLightBrowser
             }
             if (!string.IsNullOrWhiteSpace(activeManifest.SourceUrl))
             {
+                links += "<a class='link secondary' data-open-url='" + EscapeHtml(activeManifest.SourceUrl + "/releases") + "' href='" + EscapeHtml(activeManifest.SourceUrl + "/releases") + "'>Descargar desde GitHub Releases</a>";
                 links += "<a class='link secondary' data-open-url='" + EscapeHtml(activeManifest.SourceUrl) + "' href='" + EscapeHtml(activeManifest.SourceUrl) + "'>Abrir GitHub</a>";
             }
             string history = ChangelogHtml(activeManifest.ChangelogMarkdown);

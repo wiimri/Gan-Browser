@@ -1957,7 +1957,9 @@ namespace GXLightBrowser
             {
                 menu.Items.Add(CreateMenuItem("Buscar actualizaciones", "", async delegate { await CheckForUpdatesAsync(true); }));
             }
-
+            menu.Items.Add(CreateMenuItem("Descargar desde GitHub", "", delegate {
+                try { Process.Start("https://github.com/wiimri/Gan-Browser/releases"); } catch { }
+            }));
             menu.Items.Add(CreateMenuItem("Notas de actualización", "v" + _updateManifest.Version, delegate { NavigateActive(UpdatedUrl); }));
             menu.Items.Add(CreateMenuItem("Herramientas de desarrollo", "F12", delegate
             {
@@ -2063,8 +2065,8 @@ namespace GXLightBrowser
                     return;
                 }
 
-                bool hashValid = await VerifyInstallerHashAsync(installerPath, manifest, ct);
-                if (!hashValid)
+                bool? hashValid = await VerifyInstallerHashAsync(installerPath, manifest, ct);
+                if (hashValid == false)
                 {
                     File.Delete(installerPath);
                     _status.Text = "Actualizacion rechazada: hash no coincide.";
@@ -2074,6 +2076,30 @@ namespace GXLightBrowser
                             "Actualizacion rechazada", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     return;
+                }
+
+                if (hashValid == null)
+                {
+                    if (userRequested)
+                    {
+                        DialogResult dr = MessageBox.Show(this,
+                            "No se pudo verificar la firma SHA-256 del instalador." + Environment.NewLine +
+                            "Esto puede ocurrir si el manifiesto remoto aun no esta actualizado." + Environment.NewLine +
+                            Environment.NewLine +
+                            "¿Aplicar la actualizacion de todas formas?" + Environment.NewLine +
+                            "(Si tienes dudas, abre GitHub y descarga manualmente.)",
+                            "Verificacion no disponible", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                        if (dr != DialogResult.Yes)
+                        {
+                            File.Delete(installerPath);
+                            _status.Text = "Actualizacion cancelada por seguridad.";
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        _status.Text = "Actualizacion descargada pero no verificada (SHA-256 no disponible).";
+                    }
                 }
 
                 _preparedUpdateInstallerPath = installerPath;
@@ -2180,7 +2206,7 @@ namespace GXLightBrowser
             throw new IOException("No se pudo descargar la actualizacion despues de " + maxAttempts + " intentos.", lastError);
         }
 
-        private static async Task<bool> VerifyInstallerHashAsync(string installerPath, UpdateManifest manifest, CancellationToken ct)
+        private async Task<bool?> VerifyInstallerHashAsync(string installerPath, UpdateManifest manifest, CancellationToken ct)
         {
             if (!File.Exists(installerPath))
             {
@@ -2189,17 +2215,14 @@ namespace GXLightBrowser
 
             string expectedSha256 = null;
 
-            // Prioridad 1: SHA-256 inline desde update.json (mas seguro, no depende de descarga externa)
             if (!string.IsNullOrWhiteSpace(manifest.Sha256))
             {
                 expectedSha256 = manifest.Sha256.Trim();
             }
-            // Prioridad 2: SHA-256 desde archivo .sha256.txt externo
             else if (!string.IsNullOrWhiteSpace(manifest.Sha256Url))
             {
                 try
                 {
-                    string hashPath = installerPath + ".sha256.txt";
                     using (HttpResponseMessage response = await _httpClient.GetAsync(manifest.Sha256Url, ct).ConfigureAwait(false))
                     {
                         response.EnsureSuccessStatusCode();
@@ -2209,13 +2232,12 @@ namespace GXLightBrowser
                 }
                 catch
                 {
-                    return false;
                 }
             }
 
             if (string.IsNullOrWhiteSpace(expectedSha256))
             {
-                return false;
+                return null;
             }
 
             using (SHA256 sha = SHA256.Create())

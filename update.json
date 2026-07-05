@@ -4,7 +4,7 @@
   "publishedAt": "2026-07-05",
   "downloadUrl": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe",
   "sha256Url": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt",
-  "sha256": "UPDATE_ME",
+  "sha256": "",
   "sourceUrl": "https://github.com/wiimri/Gan-Browser",
   "changelogUrl": "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md",
   "highlights": [
