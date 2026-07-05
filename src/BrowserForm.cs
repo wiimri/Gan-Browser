@@ -4664,44 +4664,71 @@ namespace GXLightBrowser
     window.__gxLightYouTubeCompatibilityMode = true;
 
     var _nativeParse = JSON.parse.bind(JSON);
+    var _nativeStringify = JSON.stringify;
 
-    var adKeys = ['adPlacements','adSlots','playerAds','no_ads','adBreakHeartbeatParams','adBreakParams','linearAdSequenceRenderer','instreamVideoAdRenderer','adPlacementRenderer'];
+    var adKeyPatterns = ['adplacement','adslot','playerad','adbreak','admodule','adrenderer','linearad','instreamad','adsequence','no_ads','adload','adinterrupt','adpods','adpod','adinfo','adtag','adurl','adblock','adwarning','adoverlay','adimage','adtext','adtitle','adbutton','sponsored','promotedvideo','recommendedad','adunit','adtype','adformat','adcontent','adnetwork','adconfig','adparams','preroll','midroll','postroll','admeta','addata','adobject','adsystem','vast','vmap','companionad','bannerad','overlayad'];
 
-    function deepPrune(obj, seen) {
-        if (!obj || typeof obj !== 'object') return;
-        seen = seen || new WeakSet();
-        if (seen.has(obj)) return;
-        seen.add(obj);
-        for (var k = 0; k < adKeys.length; k++) {
-            var key = adKeys[k];
-            if (key in obj) {
-                if (Array.isArray(obj[key])) obj[key] = [];
-                else if (typeof obj[key] === 'object') obj[key] = {};
-            }
+    function isAdKey(key) {
+        var lower = (typeof key === 'string' ? key : String(key)).toLowerCase();
+        for (var i = 0; i < adKeyPatterns.length; i++) {
+            if (lower.indexOf(adKeyPatterns[i]) >= 0) return true;
         }
+        return false;
+    }
+
+    function deleteAdProps(obj, depth) {
+        if (!obj || typeof obj !== 'object' || depth > 30) return;
         var keys = Object.keys(obj);
         for (var i = 0; i < keys.length; i++) {
+            if (isAdKey(keys[i])) {
+                try { delete obj[keys[i]]; } catch(e) {}
+            }
+        }
+        for (var i = 0; i < keys.length; i++) {
             var val = obj[keys[i]];
-            if (Array.isArray(val)) {
-                for (var j = 0; j < val.length; j++) {
-                    if (val[j] && typeof val[j] === 'object') deepPrune(val[j], seen);
+            if (val && typeof val === 'object') {
+                if (Array.isArray(val)) {
+                    for (var j = 0; j < val.length; j++) {
+                        if (val[j] && typeof val[j] === 'object') deleteAdProps(val[j], depth + 1);
+                    }
+                } else {
+                    deleteAdProps(val, depth + 1);
                 }
-            } else if (val && typeof val === 'object') {
-                deepPrune(val, seen);
             }
         }
     }
 
-    JSON.parse = function(str) {
-        var r = _nativeParse(str);
-        if (r && typeof r === 'object') deepPrune(r);
+    function guardGlobal(name) {
+        var stored;
+        try {
+            Object.defineProperty(window, name, {
+                configurable: true, enumerable: true,
+                get: function() { return stored; },
+                set: function(v) { if (v && typeof v === 'object') deleteAdProps(v, 0); stored = v; }
+            });
+        } catch(e) {}
+    }
+    guardGlobal('ytInitialPlayerResponse');
+    guardGlobal('ytInitialData');
+    try {
+        var _ytCfg = window.ytcfg;
+        Object.defineProperty(window, 'ytcfg', {
+            configurable: true,
+            get: function() { return _ytCfg; },
+            set: function(v) { if (v && v.data && typeof v.data === 'object') deleteAdProps(v.data, 0); _ytCfg = v; }
+        });
+    } catch(e) {}
+
+    JSON.parse = function(str, reviver) {
+        var r = _nativeParse(str, reviver);
+        if (r && typeof r === 'object') deleteAdProps(r, 0);
         return r;
     };
 
     var _resJson = Response.prototype.json;
     Response.prototype.json = function() {
         return _resJson.call(this).then(function(d) {
-            if (d && typeof d === 'object') deepPrune(d);
+            if (d && typeof d === 'object') deleteAdProps(d, 0);
             return d;
         });
     };
@@ -4709,22 +4736,20 @@ namespace GXLightBrowser
     var _fetch = window.fetch;
     window.fetch = function(req, init) {
         return _fetch.call(window, req, init).then(function(resp) {
-            var url = typeof req === 'string' ? req : (req instanceof Request ? req.url : '');
+            var url = typeof req === 'string' ? req : (req && req.url ? req.url : '');
             if (url.indexOf('/youtubei/v1/') >= 0 || url.indexOf('player?') >= 0 || url.indexOf('get_watch?') >= 0) {
                 var ct = resp.headers.get('content-type') || '';
-                if (ct.indexOf('application/json') >= 0) {
+                if (ct.indexOf('json') >= 0 || ct.indexOf('text') >= 0 || ct.indexOf('javascript') >= 0) {
                     return resp.clone().text().then(function(text) {
                         try {
                             var data = _nativeParse(text);
-                            deepPrune(data);
-                            return new Response(JSON.stringify(data), {
+                            deleteAdProps(data, 0);
+                            return new Response(_nativeStringify(data), {
                                 status: resp.status,
                                 statusText: resp.statusText,
                                 headers: resp.headers
                             });
-                        } catch(e) {
-                            return resp;
-                        }
+                        } catch(e) { return resp; }
                     });
                 }
             }
@@ -4751,33 +4776,38 @@ namespace GXLightBrowser
 
     function injectCss() {
         if (document.getElementById('gxlight-ad-css')) return;
-        var style = document.createElement('style');
-        style.id = 'gxlight-ad-css';
-        style.textContent = '#masthead-ad,#player-ads,ytd-ad-slot-renderer,ytd-companion-slot-renderer,ytd-promoted-video-renderer,ytd-display-ad-renderer,ytd-video-masthead-ad-v3-renderer,.ytp-ad-progress,.ytp-ad-progress-list,ytd-statement-banner-renderer,.ytp-ad-module,.video-ads,.ytp-ad-overlay-container,.ytp-ad-player-overlay{display:none!important;width:0!important;height:0!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}';
-        (document.head||document.documentElement).appendChild(style);
+        var s = document.createElement('style');
+        s.id = 'gxlight-ad-css';
+        s.textContent = '#masthead-ad,#player-ads,ytd-ad-slot-renderer,ytd-companion-slot-renderer,ytd-promoted-video-renderer,ytd-display-ad-renderer,ytd-video-masthead-ad-v3-renderer,.ytp-ad-progress,.ytp-ad-progress-list,ytd-statement-banner-renderer,.ytp-ad-module,.video-ads,.ytp-ad-overlay-container,.ytp-ad-player-overlay,.ytp-ad-image-overlay,ytd-action-companion-ad-renderer,ytd-in-feed-ad-layout-renderer,ytd-player-legacy-desktop-watch-ads-renderer,ytd-engagement-panel-section-list-renderer[target-id=""engagement-panel-ads""]{display:none!important;width:0!important;height:0!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}';
+        (document.head || document.documentElement).appendChild(s);
     }
 
     function clickSkips() {
-        var skip = document.querySelector('.ytp-ad-skip-button,.ytp-ad-skip-button-modern,.ytp-skip-ad-button,button[aria-label^=""Skip""],button[aria-label^=""Saltar""],button[aria-label^=""Omitir""]');
-        if (skip && skip.getClientRects().length > 0 && !skip.disabled && typeof skip.click === 'function') {
-            skip.click();
-        }
+        var skip = document.querySelector('.ytp-ad-skip-button,.ytp-ad-skip-button-modern,.ytp-skip-ad-button,button[aria-label^=""Skip""],button[aria-label^=""Saltar""],button[aria-label^=""Omitir""],button[aria-label*=""skip""]');
+        if (skip && skip.getClientRects().length > 0 && !skip.disabled && typeof skip.click === 'function') skip.click();
     }
 
-    var obs = new MutationObserver(function() {
-        var sel = '#masthead-ad,#player-ads,ytd-ad-slot-renderer,ytd-companion-slot-renderer,ytd-promoted-video-renderer,ytd-display-ad-renderer,ytd-video-masthead-ad-v3-renderer,.ytp-ad-progress,.ytp-ad-progress-list,ytd-statement-banner-renderer,.ytp-ad-module,.video-ads,.ytp-ad-overlay-container,.ytp-ad-player-overlay';
+    function cleanupDom() {
+        var sel = '#masthead-ad,#player-ads,ytd-ad-slot-renderer,ytd-companion-slot-renderer,ytd-promoted-video-renderer,ytd-display-ad-renderer,ytd-video-masthead-ad-v3-renderer,.ytp-ad-progress,.ytp-ad-progress-list,ytd-statement-banner-renderer,.ytp-ad-module,.video-ads,.ytp-ad-overlay-container,.ytp-ad-player-overlay,.ytp-ad-image-overlay,ytd-action-companion-ad-renderer,ytd-in-feed-ad-layout-renderer,ytd-player-legacy-desktop-watch-ads-renderer,ytd-engagement-panel-section-list-renderer[target-id=""engagement-panel-ads""]';
         document.querySelectorAll(sel).forEach(function(el) { el.remove(); });
         clickSkips();
-    });
-    if (document.documentElement) {
-        injectCss();
-        obs.observe(document.documentElement, { childList: true, subtree: true });
     }
 
-    window.__gxLightRunYouTubeShields = function() {
-        document.querySelectorAll('#masthead-ad,#player-ads,.ytp-ad-module,.video-ads').forEach(function(el) { el.remove(); });
-        clickSkips();
-    };
+    if (document.documentElement) {
+        injectCss();
+        cleanupDom();
+        new MutationObserver(cleanupDom).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+        setInterval(cleanupDom, 2000);
+    } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            injectCss();
+            cleanupDom();
+            new MutationObserver(cleanupDom).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+            setInterval(cleanupDom, 2000);
+        });
+    }
+
+    window.__gxLightRunYouTubeShields = cleanupDom;
 })();";
         }
 
