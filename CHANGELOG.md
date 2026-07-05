@@ -2,10 +2,27 @@
 
 Este archivo es el historial estable de Gan Browser, anteriormente llamado GX Light Browser.
 
+## v2.15 - YouTube Shields mejorado y bloqueo multicapa
+
+Fecha: `2026-07-05`
+
+Cambios:
+
+- YouTube Shields reescrito con deepPrune mejorado que cubre 9 claves de anuncio (adPlacements, adSlots, playerAds, adBreakHeartbeatParams, adBreakParams, linearAdSequenceRenderer, instreamVideoAdRenderer, adPlacementRenderer, no_ads).
+- Se agregó inyección CSS con display:none como capa inicial de bloqueo, complementando el MutationObserver para elementos dinámicos.
+- Skip automático de anuncios: el script ahora hace clic en botones "Skip Ad"/"Saltar"/"Omitir" cuando aparecen.
+- Corregido cache busting en JSON.parse override: se guarda _nativeParse una sola vez y se reutiliza, evitando condiciones de carrera.
+- Nuevas reglas de red en AdBlocker: 2mdn.net, adform.net, criteo.com, criteo.net, youtube.com/api/stats/atr, youtube.com/youtubei/v1/player/get_download_playback, /pagead/.
+- HTTP 204 "No Content" en lugar de 403 "Blocked" para evitar detección del bloqueador por cantidad de requests bloqueados.
+- SiteCompatibilityMode ahora permite que YouTube pase por el bloqueo de red mientras Crunchyroll sigue en modo compatibilidad total.
+- Se agregaron más endpoints de YouTube a IsCriticalYouTubeBlock: /api/stats/qoe, /api/stats/delayplay, /api/stats/atr, /get_midroll, /ptracking, /pagead/.
+- Update-Filters.ps1 ahora incluye reglas cosmeticas especificas de YouTube (ytd-ad-slot-renderer, .ytp-ad-module, etc.).
+- Tests actualizados en AdBlockerProbe.cs para cubrir nuevos endpoints bloqueados.
+
 ## Version actual
 
-- Version publicada: `2.14`
-- Fecha: `2026-06-23`
+- Version publicada: `2.15`
+- Fecha: `2026-07-05`
 - Codigo fuente: <https://github.com/wiimri/Gan-Browser>
 - Tags: <https://github.com/wiimri/Gan-Browser/tags>
 

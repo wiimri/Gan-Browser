@@ -46,8 +46,8 @@ function verifyInternalPageRoutes() {
     [browserForm.includes("Collapse this tab"), "individual compact tab action is missing"],
     [browserForm.includes("SetSelectedTabsCompact"), "selected compact tab action is missing"],
     [browserForm.includes('ConfigureButton(_shield, "Block Ads On"'), "visible Block Ads button is missing"],
-    [browserForm.includes("installInitialDataGuard('ytInitialPlayerResponse')"), "initial YouTube player response guard is missing"],
-    [browserForm.includes("sanitizePlayerData"), "YouTube player response sanitizer is missing"],
+    [browserForm.includes("Modo compatibilidad YouTube"), "YouTube compatibility mode notice is missing"],
+    [browserForm.includes("__gxLightYouTubeCompatibilityMode"), "YouTube compatibility marker is missing"],
     [browserForm.includes("IMessageFilter"), "WebView2 native shortcut handling is missing"],
     [browserForm.includes("PreFilterMessage"), "native keyboard message routing is missing"],
     [browserForm.includes("IsBrowserShortcut"), "browser shortcut routing is missing"],
@@ -281,21 +281,23 @@ async function main() {
     window.__gxLightAdsEnabled = false;
     const disabledParsed = JSON.parse(JSON.stringify({ adPlacements: [{}], videoDetails: { videoId: "keep" } }));
     return {
-      name: "youtube-shields",
+      name: "youtube-compatibility",
       width: window.innerWidth,
       height: window.innerHeight,
       failures: [
-        document.body.dataset.skip === "yes" ? null : "skip button was not clicked",
-        document.querySelector("#player-ads") ? "player ad container was not removed" : null,
-        document.querySelector("ytd-promoted-video-renderer") ? "promoted video renderer was not removed" : null,
-        document.querySelector(".ytp-ad-overlay-container") ? "ad overlay was not removed" : null,
+        window.__gxLightYouTubeCompatibilityMode ? null : "YouTube compatibility mode was not marked",
+        typeof window.__gxLightRunYouTubeShields === "function" ? null : "YouTube compatibility no-op is missing",
+        document.body.dataset.skip === "yes" ? "skip button was clicked in compatibility mode" : null,
+        document.querySelector("#player-ads") ? null : "player ad container was removed in compatibility mode",
+        document.querySelector("ytd-promoted-video-renderer") ? null : "promoted video renderer was removed in compatibility mode",
+        document.querySelector(".ytp-ad-overlay-container") ? null : "ad overlay was removed in compatibility mode",
         document.querySelector("video").muted ? "video remained muted after the ad" : null,
         document.querySelector("video").playbackRate !== 1 ? "video playback rate was not restored" : null,
-        parsed.adPlacements || parsed.playerAds || parsed.nested.adSlots ? "JSON.parse retained player ad data" : null,
-        window.ytInitialPlayerResponse.adPlacements || window.ytInitialPlayerResponse.playerAds ? "initial player response retained ad data" : null,
-        fetched.adPlacements || fetched.playerAds || fetched.adSlots ? "fetch player response retained ad data" : null,
+        parsed.adPlacements && parsed.playerAds && parsed.nested.adSlots ? null : "JSON.parse removed player ad data in compatibility mode",
+        window.ytInitialPlayerResponse.adPlacements && window.ytInitialPlayerResponse.playerAds ? null : "initial player response was sanitized in compatibility mode",
+        fetched.adPlacements && fetched.playerAds && fetched.adSlots ? null : "fetch player response was sanitized in compatibility mode",
         fetched.videoDetails && fetched.videoDetails.videoId === "content-video" ? null : "fetch sanitizer removed normal video data",
-        disabledParsed.adPlacements ? null : "Block Ads Off did not disable player response sanitation"
+        disabledParsed.adPlacements ? null : "Block Ads Off changed normal JSON parsing"
       ].filter(Boolean)
     };
   });

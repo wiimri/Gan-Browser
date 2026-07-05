@@ -49,6 +49,36 @@ internal static class AdBlockerProbe
                 return 1;
             }
 
+            if (!blocker.ShouldBlock(new Uri("https://www.youtube.com/api/stats/ads"), document))
+            {
+                Console.Error.WriteLine("Expected YouTube ads stats endpoint to be blocked.");
+                return 1;
+            }
+
+            if (!blocker.ShouldBlock(new Uri("https://www.youtube.com/youtubei/v1/attestation/"), document))
+            {
+                Console.Error.WriteLine("Expected YouTube attestation endpoint to be blocked.");
+                return 1;
+            }
+
+            if (!blocker.ShouldBlock(new Uri("https://www.youtube.com/api/stats/atr"), document))
+            {
+                Console.Error.WriteLine("Expected YouTube ATR stats endpoint to be blocked.");
+                return 1;
+            }
+
+            if (blocker.ShouldBlock(new Uri("https://www.youtube.com/youtubei/v1/player"), document))
+            {
+                Console.Error.WriteLine("Expected the required YouTube player endpoint to remain allowed.");
+                return 1;
+            }
+
+            if (blocker.ShouldBlock(new Uri("https://www.youtube.com/s/player/abc123"), document))
+            {
+                Console.Error.WriteLine("Expected YouTube player script to remain allowed.");
+                return 1;
+            }
+
             Console.WriteLine("Ad blocker probe passed.");
             return 0;
         }

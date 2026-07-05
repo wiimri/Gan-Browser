@@ -1010,10 +1010,13 @@ namespace GXLightBrowser
                 sourceTab.LastNavigationHost = Uri.TryCreate(e.Uri, UriKind.Absolute, out startingUri)
                     ? startingUri.Host.ToLowerInvariant()
                     : string.Empty;
-                sourceTab.SiteCompatibilityMode = IsHostOrSubdomain(sourceTab.LastNavigationHost, "crunchyroll.com");
+                sourceTab.SiteCompatibilityMode = IsYouTubeHost(sourceTab.LastNavigationHost) ||
+                    IsHostOrSubdomain(sourceTab.LastNavigationHost, "crunchyroll.com");
                 if (sourceTab.SiteCompatibilityMode)
                 {
-                    sourceTab.NavigationNotice = "Modo compatibilidad Crunchyroll: Gan Guard pausado para este sitio.";
+                    sourceTab.NavigationNotice = IsYouTubeHost(sourceTab.LastNavigationHost)
+                        ? "Modo compatibilidad YouTube: Gan Guard pausado para evitar bloqueos del reproductor."
+                        : "Modo compatibilidad Crunchyroll: Gan Guard pausado para este sitio.";
                 }
             }
 
@@ -1524,7 +1527,7 @@ namespace GXLightBrowser
                 Uri.TryCreate("https://" + tab.LastNavigationHost + "/", UriKind.Absolute, out documentUri);
             }
 
-            if (tab != null && tab.SiteCompatibilityMode)
+            if (tab != null && tab.SiteCompatibilityMode && !string.IsNullOrEmpty(tab.LastNavigationHost) && !IsYouTubeHost(tab.LastNavigationHost))
             {
                 return;
             }
@@ -1555,8 +1558,8 @@ namespace GXLightBrowser
 
             e.Response = _environment.CreateWebResourceResponse(
                 new MemoryStream(new byte[0]),
-                403,
-                "Blocked",
+                204,
+                "No Content",
                 "Content-Type: text/plain");
             UpdateStatus();
         }
@@ -4621,228 +4624,139 @@ namespace GXLightBrowser
 
         private static string YouTubeShieldsScript(bool enabled)
         {
-            return @"(() => {
+            if (!enabled)
+            {
+                return @"(() => {
   const isYouTube = /(\.|^)youtube\.com$/.test(location.hostname) || location.hostname === 'youtu.be';
   if (!isYouTube) return;
-  window.__gxLightAdsEnabled = __GX_ADS_ENABLED__;
-  if (window.__gxLightYouTubeShieldsInstalled) return;
-  window.__gxLightYouTubeShieldsInstalled = true;
+  window.__gxLightAdsEnabled = true;
+  window.__gxLightYouTubeCompatibilityMode = true;
+  window.__gxLightRunYouTubeShields = function(){};
+})();";
+            }
 
-  const nativeJsonParse = JSON.parse.bind(JSON);
-  const adResponseKeys = new Set([
-    'adbreakheartbeatparams',
-    'adbreakparams',
-    'adbreakrenderer',
-    'adplacements',
-    'adplacementrenderer',
-    'adslots',
-    'adslotrenderer',
-    'instreamvideoadrenderer',
-    'linearadsequencerenderer',
-    'playerads'
-  ]);
+            return @"(function() {
+    const isYT = /(\.|^)youtube\.com$/.test(location.hostname) || location.hostname === 'youtu.be';
+    if (!isYT) return;
+    window.__gxLightAdsEnabled = false;
+    window.__gxLightYouTubeCompatibilityMode = true;
 
-  function isAdResponseKey(key) {
-    const normalized = String(key || '').toLowerCase();
-    return adResponseKeys.has(normalized) ||
-      normalized.indexOf('adplacement') >= 0 ||
-      normalized.indexOf('adslot') >= 0 ||
-      normalized.indexOf('playerad') >= 0;
-  }
+    var _nativeParse = JSON.parse.bind(JSON);
 
-  function sanitizePlayerData(value, seen) {
-    if (!window.__gxLightAdsEnabled) return value;
-    if (!value || typeof value !== 'object') return value;
-    const visited = seen || new WeakSet();
-    if (visited.has(value)) return value;
-    visited.add(value);
+    var adKeys = ['adPlacements','adSlots','playerAds','no_ads','adBreakHeartbeatParams','adBreakParams','linearAdSequenceRenderer','instreamVideoAdRenderer','adPlacementRenderer'];
 
-    if (Array.isArray(value)) {
-      value.forEach((item) => sanitizePlayerData(item, visited));
-      return value;
+    function deepPrune(obj, seen) {
+        if (!obj || typeof obj !== 'object') return;
+        seen = seen || new WeakSet();
+        if (seen.has(obj)) return;
+        seen.add(obj);
+        for (var k = 0; k < adKeys.length; k++) {
+            var key = adKeys[k];
+            if (key in obj) {
+                if (Array.isArray(obj[key])) obj[key] = [];
+                else if (typeof obj[key] === 'object') obj[key] = {};
+            }
+        }
+        var keys = Object.keys(obj);
+        for (var i = 0; i < keys.length; i++) {
+            var val = obj[keys[i]];
+            if (Array.isArray(val)) {
+                for (var j = 0; j < val.length; j++) {
+                    if (val[j] && typeof val[j] === 'object') deepPrune(val[j], seen);
+                }
+            } else if (val && typeof val === 'object') {
+                deepPrune(val, seen);
+            }
+        }
     }
 
-    Object.keys(value).forEach((key) => {
-      if (isAdResponseKey(key)) {
-        try { delete value[key]; } catch (_) {}
-        return;
-      }
-      sanitizePlayerData(value[key], visited);
-    });
-    return value;
-  }
-
-  function containsAdResponseData(text) {
-    if (!window.__gxLightAdsEnabled) return false;
-    if (typeof text !== 'string') return false;
-    const value = text.toLowerCase();
-    return value.indexOf('adplacements') >= 0 ||
-      value.indexOf('playerads') >= 0 ||
-      value.indexOf('adslots') >= 0 ||
-      value.indexOf('adslotrenderer') >= 0 ||
-      value.indexOf('adbreakheartbeatparams') >= 0;
-  }
-
-  function sanitizePlayerText(text) {
-    if (!containsAdResponseData(text)) return text;
-    try {
-      return JSON.stringify(sanitizePlayerData(nativeJsonParse(text)));
-    } catch (_) {
-      return text;
-    }
-  }
-
-  function installInitialDataGuard(name) {
-    let stored;
-    try {
-      Object.defineProperty(window, name, {
-        configurable: true,
-        enumerable: true,
-        get: () => stored,
-        set: (value) => { stored = sanitizePlayerData(value); }
-      });
-    } catch (_) {}
-  }
-
-  installInitialDataGuard('ytInitialPlayerResponse');
-  installInitialDataGuard('ytInitialData');
-
-  JSON.parse = function(text, reviver) {
-    const value = nativeJsonParse(text, reviver);
-    return containsAdResponseData(text) ? sanitizePlayerData(value) : value;
-  };
-
-  const nativeFetch = window.fetch && window.fetch.bind(window);
-  if (nativeFetch) {
-    window.fetch = async function(...args) {
-      const response = await nativeFetch(...args);
-      const input = args[0];
-      const url = typeof input === 'string' ? input : (input && input.url) || '';
-      if (url.indexOf('/youtubei/v1/player') < 0) return response;
-
-      try {
-        const text = await response.clone().text();
-        const cleaned = new Response(sanitizePlayerText(text), {
-          status: response.status,
-          statusText: response.statusText,
-          headers: response.headers
-        });
-        return cleaned;
-      } catch (_) {
-        return response;
-      }
+    JSON.parse = function(str) {
+        var r = _nativeParse(str);
+        if (r && typeof r === 'object') deepPrune(r);
+        return r;
     };
-  }
 
-  const adSelectors = [
-    'ytd-ad-slot-renderer',
-    'ytd-promoted-video-renderer',
-    'ytd-display-ad-renderer',
-    'ytd-companion-slot-renderer',
-    'ytd-action-companion-ad-renderer',
-    'ytd-in-feed-ad-layout-renderer',
-    'ytd-player-legacy-desktop-watch-ads-renderer',
-    'ytd-engagement-panel-section-list-renderer[target-id=""engagement-panel-ads""]',
-    '.ytp-ad-overlay-container',
-    '.ytp-ad-player-overlay',
-    '.ytp-ad-image-overlay',
-    '.ytp-ad-module',
-    '.video-ads',
-    '#player-ads',
-    '#masthead-ad'
-  ];
+    var _resJson = Response.prototype.json;
+    Response.prototype.json = function() {
+        return _resJson.call(this).then(function(d) {
+            if (d && typeof d === 'object') deepPrune(d);
+            return d;
+        });
+    };
 
-  const skipSelectors = [
-    '.ytp-ad-skip-button',
-    '.ytp-ad-skip-button-modern',
-    '.ytp-skip-ad-button',
-    'button.ytp-ad-skip-button-modern',
-    'button[aria-label^=""Skip""]',
-    'button[aria-label^=""Saltar""]',
-    'button[aria-label^=""Omitir""]',
-    '.ytp-ad-skip-button-container'
-  ];
+    var _fetch = window.fetch;
+    window.fetch = function(req, init) {
+        return _fetch.call(window, req, init).then(function(resp) {
+            var url = typeof req === 'string' ? req : (req instanceof Request ? req.url : '');
+            if (url.indexOf('/youtubei/v1/') >= 0 || url.indexOf('player?') >= 0 || url.indexOf('get_watch?') >= 0) {
+                var ct = resp.headers.get('content-type') || '';
+                if (ct.indexOf('application/json') >= 0) {
+                    return resp.clone().text().then(function(text) {
+                        try {
+                            var data = _nativeParse(text);
+                            deepPrune(data);
+                            return new Response(JSON.stringify(data), {
+                                status: resp.status,
+                                statusText: resp.statusText,
+                                headers: resp.headers
+                            });
+                        } catch(e) {
+                            return resp;
+                        }
+                    });
+                }
+            }
+            return resp;
+        });
+    };
 
-  function injectStyle() {
-    if (document.getElementById('gxlight-ad-blocker-css')) return;
-    const target = document.head || document.documentElement || document.body;
-    if (!target) return;
-    const style = document.createElement('style');
-    style.id = 'gxlight-ad-blocker-css';
-    style.textContent = `
-      ytd-ad-slot-renderer,
-      ytd-promoted-video-renderer,
-      ytd-display-ad-renderer,
-      ytd-companion-slot-renderer,
-      ytd-action-companion-ad-renderer,
-      ytd-in-feed-ad-layout-renderer,
-      ytd-player-legacy-desktop-watch-ads-renderer,
-      ytd-engagement-panel-section-list-renderer[target-id=""engagement-panel-ads""],
-      .ytp-ad-overlay-container,
-      .ytp-ad-player-overlay,
-      .ytp-ad-image-overlay,
-      .ytp-ad-module,
-      .video-ads,
-      #player-ads,
-      #masthead-ad {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-      }
-    `;
-    target.appendChild(style);
-  }
-
-  function clickSkips() {
-    const player = document.querySelector('.html5-video-player');
-    const inAd = player && (player.classList.contains('ad-showing') || player.classList.contains('ad-interrupting'));
-    if (!inAd) return;
-    for (const selector of skipSelectors) {
-      document.querySelectorAll(selector).forEach((node) => {
-        const visible = node && node.getClientRects && node.getClientRects().length > 0;
-        if (visible && !node.disabled && typeof node.click === 'function') {
-          node.click();
+    var _then = Promise.prototype.then;
+    Promise.prototype.then = function(ful, rej) {
+        if (typeof ful === 'function') {
+            var s = ful.toString().replace(/\s/g, '');
+            if (s.indexOf('onAbnormalityDetected') >= 0 || s.indexOf('abnormality') >= 0) {
+                return _then.call(this, function(){}, rej);
+            }
         }
-      });
-    }
-  }
+        return _then.call(this, ful, rej);
+    };
 
-  function removeAdNodes() {
-    for (const selector of adSelectors) {
-      document.querySelectorAll(selector).forEach((node) => {
-        const isPlayerAdContainer = node && (node.matches('.video-ads') || node.matches('.ytp-ad-module'));
-        if (node && node.parentNode && !isPlayerAdContainer) {
-          node.remove();
+    var _has = Map.prototype.has;
+    Map.prototype.has = function(k) {
+        if (k === 'onSnackbarMessage') return false;
+        return _has.call(this, k);
+    };
+
+    function injectCss() {
+        if (document.getElementById('gxlight-ad-css')) return;
+        var style = document.createElement('style');
+        style.id = 'gxlight-ad-css';
+        style.textContent = '#masthead-ad,#player-ads,ytd-ad-slot-renderer,ytd-companion-slot-renderer,ytd-promoted-video-renderer,ytd-display-ad-renderer,ytd-video-masthead-ad-v3-renderer,.ytp-ad-progress,.ytp-ad-progress-list,ytd-statement-banner-renderer,.ytp-ad-module,.video-ads,.ytp-ad-overlay-container,.ytp-ad-player-overlay{display:none!important;width:0!important;height:0!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}';
+        (document.head||document.documentElement).appendChild(style);
+    }
+
+    function clickSkips() {
+        var skip = document.querySelector('.ytp-ad-skip-button,.ytp-ad-skip-button-modern,.ytp-skip-ad-button,button[aria-label^=""Skip""],button[aria-label^=""Saltar""],button[aria-label^=""Omitir""]');
+        if (skip && skip.getClientRects().length > 0 && !skip.disabled && typeof skip.click === 'function') {
+            skip.click();
         }
-      });
     }
-  }
 
-  function run() {
-    if (!window.__gxLightAdsEnabled) {
-      const style = document.getElementById('gxlight-ad-blocker-css');
-      if (style) style.remove();
-      return;
+    var obs = new MutationObserver(function() {
+        var sel = '#masthead-ad,#player-ads,ytd-ad-slot-renderer,ytd-companion-slot-renderer,ytd-promoted-video-renderer,ytd-display-ad-renderer,ytd-video-masthead-ad-v3-renderer,.ytp-ad-progress,.ytp-ad-progress-list,ytd-statement-banner-renderer,.ytp-ad-module,.video-ads,.ytp-ad-overlay-container,.ytp-ad-player-overlay';
+        document.querySelectorAll(sel).forEach(function(el) { el.remove(); });
+        clickSkips();
+    });
+    if (document.documentElement) {
+        injectCss();
+        obs.observe(document.documentElement, { childList: true, subtree: true });
     }
-    injectStyle();
-    clickSkips();
-    removeAdNodes();
-  }
 
-  window.__gxLightRunYouTubeShields = run;
-  run();
-  setInterval(run, 1000);
-  const observe = () => {
-    if (!document.documentElement) return;
-    new MutationObserver(run).observe(document.documentElement, { childList: true, subtree: true });
-    run();
-  };
-  if (document.documentElement) observe();
-  else document.addEventListener('DOMContentLoaded', observe, { once: true });
-})();".Replace("__GX_ADS_ENABLED__", enabled ? "true" : "false");
+    window.__gxLightRunYouTubeShields = function() {
+        document.querySelectorAll('#masthead-ad,#player-ads,.ytp-ad-module,.video-ads').forEach(function(el) { el.remove(); });
+        clickSkips();
+    };
+})();";
         }
 
         private void SetYouTubeShieldsEnabled(bool enabled)

@@ -1,15 +1,18 @@
 {
-  "version": "2.14",
-  "releaseName": "Gan Browser 2.14",
-  "publishedAt": "2026-06-23",
+  "version": "2.15",
+  "releaseName": "Gan Browser 2.15",
+  "publishedAt": "2026-07-05",
   "downloadUrl": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.exe",
   "sha256Url": "https://github.com/wiimri/Gan-Browser/releases/latest/download/GanBrowser-Setup-x64.sha256.txt",
-  "sha256": "7F9A29DD897ACC7E06DAA43D331D04C2E93384463FA75298769D524B2359ADB2",
+  "sha256": "UPDATE_ME",
   "sourceUrl": "https://github.com/wiimri/Gan-Browser",
   "changelogUrl": "https://raw.githubusercontent.com/wiimri/Gan-Browser/main/CHANGELOG.md",
   "highlights": [
-    "Reducción de parpadeo (flickering) en la interfaz principal.",
-    "Optimización del dibujado del fondo en las pestañas sin bordes.",
-    "Estilo de dibujado personalizado mejorado con soporte para doble búfer de control."
+    "YouTube Shields mejorado: inyección JavaScript más robusta contra anuncios.",
+    "Capa adicional de bloqueo CSS + MutationObserver para elementos dinámicos.",
+    "Skip automático de anuncios que logren pasar el filtro inicial.",
+    "Más claves de anuncio bloqueadas en respuestas JSON (deepPrune mejorado).",
+    "Corregido el cache busting en JSON.parse override para evitar condiciones de carrera.",
+    "Nuevas reglas de red en AdBlocker para endpoints de YouTube."
   ]
 }

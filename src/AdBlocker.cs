@@ -268,6 +268,10 @@ namespace GXLightBrowser
             yield return "||outbrain.com^";
             yield return "||pagead2.googlesyndication.com^";
             yield return "||googleads.g.doubleclick.net^";
+            yield return "||2mdn.net^";
+            yield return "||adform.net^";
+            yield return "||criteo.com^";
+            yield return "||criteo.net^";
             yield return "youtube.com/pagead/";
             yield return "youtube.com/api/stats/ads";
             yield return "youtube.com/get_midroll";
@@ -275,10 +279,13 @@ namespace GXLightBrowser
             yield return "youtube.com/youtubei/v1/log_event";
             yield return "youtube.com/youtubei/v1/ads/";
             yield return "youtube.com/youtubei/v1/attestation/";
+            yield return "youtube.com/youtubei/v1/player/get_download_playback";
             yield return "youtube.com/api/stats/qoe";
             yield return "youtube.com/api/stats/delayplay";
+            yield return "youtube.com/api/stats/atr";
             yield return "youtubei.googleapis.com/youtubei/v1/ads/";
             yield return "youtubei.googleapis.com/youtubei/v1/attestation/";
+            yield return "/pagead/";
             yield return "/ads/";
             yield return "/adserver/";
             yield return "banner_ad";
